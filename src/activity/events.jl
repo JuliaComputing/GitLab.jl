@@ -153,7 +153,7 @@ const COMMENT_EVENTS = ["commit_comment",
 =#
 
 const COMMENT_EVENTS = ["Note Hook",
-                        "pull_request",
+                        "MergeRequest",
                         "pull_request_review_comment",
                         "issues",
                         "issue_comment"]
@@ -166,7 +166,7 @@ immutable CommentListener
                              secret = nothing,
                              repos = nothing,
                              forwards = nothing)
-        listener = EventListener(auth=auth, secret=secret,
+            listener = EventListener(auth=auth, secret=secret,
                                  events=COMMENT_EVENTS, repos=repos,
                                  forwards=forwards) do event
             return handle_comment(handle, event, auth, trigger, check_collab)

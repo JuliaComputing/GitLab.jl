@@ -24,20 +24,22 @@ type Comment <: GitLabType
 
     noteable_type::Nullable{GitLabString}
     ## created_at::Nullable{Dates.DateTime}
-    ## created_at::Nullable{GitLabString}
-    line_code::Nullable{Int}
+    created_at::Nullable{GitLabString}
+    line_code::Nullable{Int64}
     note::Nullable{GitLabString}
     ## author_id::Nullable{Owner}
+    author_id::Nullable{Int64}
     updated_by_id::Nullable{GitLabString}
-    noteable_id::Nullable{GitLabString}
+    noteable_id::Nullable{Int64}
     commit_id::Nullable{GitLabString}
     system::Nullable{Bool}
     url::Nullable{HttpCommon.URI}
     is_award::Nullable{Bool}
     st_diff::Nullable{GitLabString}
-    id::Nullable{Int}
+    id::Nullable{Int64}
     ## updated_at::Nullable{Dates.DateTime}
-    project_id::Nullable{Int}
+    updated_at::Nullable{GitLabString}
+    project_id::Nullable{Int64}
     attachment::Nullable{GitLabString}
     ## type::Nullable{GitLabString}
 
@@ -52,8 +54,27 @@ type Comment <: GitLabType
     user::Nullable{Owner}
 =#
 
-
 #= 
+    ## Merge request comment
+  "noteable_type" => "MergeRequest"
+  "created_at"    => "2016-07-19 09:45:27 UTC"
+  "line_code"     => nothing
+  "note"          => "`sayhello(\"ABC\", \"cool\")`"
+  "author_id"     => 2
+  "updated_by_id" => nothing
+  "noteable_id"   => 4
+  "commit_id"     => ""
+  "system"        => false
+  "url"           => "http://104.197.141.88/mdpradeep/TestProject1/merge_requests/4#note_134"
+  "is_award"      => false
+  "st_diff"       => nothing
+  "id"            => 134
+  "updated_at"    => "2016-07-19 09:45:27 UTC"
+  "project_id"    => 1
+  "attachment"    => nothing
+  "type"          => nothing
+
+    ## commit comment
   "noteable_type" => "Commit"
   "created_at"    => "2016-07-18 06:49:53 UTC"
   "line_code"     => nothing
@@ -103,14 +124,17 @@ end
 function comments(repo, item, kind = :issue; options...)
     if (kind == :issue) || (kind == :pr)
         ## MDP path = "/repos/$(name(repo))/issues/$(name(item))/comments"
-        path = "/api/v3/projects/$(repo.project_id.value)/issues/$(name(item))/comments"
+        path = "/api/v3/projects/$(repo.project_id.value)/issues/$(name(item))/notes"
     elseif kind == :review
-        path = "/api/v3/projects/$(repo.project_id.value)/pulls/$(name(item))/comments"
+        ## MDP path = "/api/v3/projects/$(repo.project_id.value)/pulls/$(name(item))/comments"
+        path = "/api/v3/projects/$(repo.project_id.value)/merge_requests/$(name(item))/notes"
     elseif kind == :commit
         path = "/api/v3/projects/$(repo.project_id.value)/commits/$(name(item))/comments"
     else
         error(kind_err_str(kind))
     end
+
+@show path
     results, page_data = gh_get_paged_json(path; options...)
     return map(Comment, results), page_data
 end
@@ -118,16 +142,17 @@ end
 function create_comment(repo, item, kind = :issue; options...)
     if (kind == :issue) || (kind == :pr)
         ## MDP path = "/repos/$(name(repo))/issues/$(name(item))/comments"
-        path = "/api/v3/projects/$(repo.project_id.value)/issues/$(name(item))/comments"
+        path = "/api/v3/projects/$(repo.project_id.value)/issues/$(name(item))/notes"
     elseif kind == :review
         ## MDP path = "/repos/$(name(repo))/pulls/$(name(item))/comments"
-        path = "/api/v3/projects/$(repo.project_id.value)/pulls/$(name(item))/comments"
+        path = "/api/v3/projects/$(repo.project_id.value)/merge_requests/$(name(item))/notes"
     elseif kind == :commit
         ## MDP path = "/repos/$(name(repo))/commits/$(name(item))/comments"
         path = "/api/v3/projects/$(repo.project_id.value)/repository/commits/$(name(item))/comments"
     else
         error(kind_err_str(kind))
     end
+@show path
     return Comment(gh_post_json(path; options...))
 end
 
