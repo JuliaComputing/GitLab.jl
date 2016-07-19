@@ -3,14 +3,16 @@
 #####################
 
 type WebhookEvent
-    kind::GitHubString
+    kind::GitLabString
     payload::Dict
     repository::Repo
     sender::Owner
 end
 
 function event_from_payload!(kind, data::Dict)
+    @show data
     if haskey(data, "repository")
+        data["repository"]["project_id"] = data["project_id"] ## Repos are identified through projects !
         repository = Repo(data["repository"])
     elseif kind == "membership"
         repository = Repo("")
@@ -18,8 +20,16 @@ function event_from_payload!(kind, data::Dict)
         error("event payload is missing repository field")
     end
 
+    @show repository
+    #=
     if haskey(data, "sender")
         sender = Owner(data["sender"])
+    else
+        error("event payload is missing sender")
+    end
+    =#
+    if haskey(data["project"], "namespace")
+        sender = Owner(data["project"]["namespace"])
     else
         error("event payload is missing sender")
     end
@@ -31,15 +41,19 @@ end
 # Validation Functions #
 ########################
 
-has_event_header(request::HttpCommon.Request) = haskey(request.headers, "X-GitHub-Event")
-event_header(request::HttpCommon.Request) = request.headers["X-GitHub-Event"]
+has_event_header(request::HttpCommon.Request) = haskey(request.headers, "X-Gitlab-Event")
+event_header(request::HttpCommon.Request) = request.headers["X-Gitlab-Event"]
 
-has_sig_header(request::HttpCommon.Request) = haskey(request.headers, "X-Hub-Signature")
-sig_header(request::HttpCommon.Request) = request.headers["X-Hub-Signature"]
+## has_sig_header(request::HttpCommon.Request) = haskey(request.headers, "X-Hub-Signature")
+## sig_header(request::HttpCommon.Request) = request.headers["X-Hub-Signature"]
+has_sig_header(request::HttpCommon.Request) = haskey(request.headers, "X-Gitlab-Token")
+sig_header(request::HttpCommon.Request) = request.headers["X-Gitlab-Token"]
 
 function has_valid_secret(request::HttpCommon.Request, secret)
+    @show request.headers
     if has_sig_header(request)
         secret_sha = "sha1="*bytes2hex(MbedTLS.digest(MbedTLS.MD_SHA1, request.data, secret))
+        @show sig_header(request), secret_sha
         return sig_header(request) == secret_sha
     end
     return false
@@ -50,6 +64,7 @@ function is_valid_event(request::HttpCommon.Request, events)
 end
 
 function from_valid_repo(event, repos)
+@show event.repository, repos
     return (name(event.repository) == "" || in(name(event.repository), repos))
 end
 
@@ -82,7 +97,7 @@ immutable EventListener
         end
 
         server.http.events["listen"] = port -> begin
-            println("Listening for GitHub events sent to $port;")
+            println("Listening for GitLab events sent to $port;")
             println("Whitelisted events: $(isa(events, Void) ? "All" : events)")
             println("Whitelisted repos: $(isa(repos, Void) ? "All" : repos)")
         end
@@ -95,8 +110,10 @@ function handle_event_request(request, handle;
                               auth::Authorization = AnonymousAuth(),
                               secret = nothing, events = nothing,
                               repos = nothing, forwards = nothing)
+    @show secret, request, events, auth, handle
     if !(isa(secret, Void)) && !(has_valid_secret(request, secret))
-        return HttpCommon.Response(400, "invalid signature")
+        ## MDP TODO
+        ## MDP return HttpCommon.Response(400, "invalid signature")
     end
 
     if !(isa(events, Void)) && !(is_valid_event(request, events))
@@ -104,6 +121,7 @@ function handle_event_request(request, handle;
     end
 
     event = event_from_payload!(event_header(request), Requests.json(request))
+    @show event
 
     if !(isa(repos, Void)) && !(from_valid_repo(event, repos))
         return HttpCommon.Response(400, "invalid repo")
@@ -126,7 +144,15 @@ end
 # CommentListener #
 ###################
 
+#=
 const COMMENT_EVENTS = ["commit_comment",
+                        "pull_request",
+                        "pull_request_review_comment",
+                        "issues",
+                        "issue_comment"]
+=#
+
+const COMMENT_EVENTS = ["Note Hook",
                         "pull_request",
                         "pull_request_review_comment",
                         "issues",
@@ -155,25 +181,35 @@ end
 
 function handle_comment(handle, event::WebhookEvent, auth::Authorization,
                         trigger::Regex, check_collab::Bool)
+@show event
     kind, payload = event.kind, event.payload
 
+@show kind
+@show payload
     if (kind == "pull_request" || kind == "issues") && payload["action"] == "opened"
         body_container = kind == "issues" ? payload["issue"] : payload["pull_request"]
-    elseif haskey(payload, "comment")
-        body_container = payload["comment"]
+    ## MDP elseif haskey(payload, "comment")
+        ## MDP body_container = payload["comment"]
+    elseif haskey(payload, "object_attributes")
+        body_container = payload["object_attributes"]
     else
         return HttpCommon.Response(204, "payload does not contain comment")
     end
+@show body_container
 
     if check_collab
         repo = event.repository
-        user = body_container["user"]["login"]
+        ## MDP user = body_container["user"]["login"]
+        user = payload["user"]["username"]
         if !(iscollaborator(repo, user; auth = auth))
             return HttpCommon.Response(204, "commenter is not collaborator")
         end
     end
 
-    trigger_match = match(trigger, body_container["body"])
+@show trigger
+    ## MDP trigger_match = match(trigger, body_container["body"])
+    trigger_match = match(trigger, body_container["note"])
+@show trigger_match
 
     if trigger_match == nothing
         return HttpCommon.Response(204, "trigger match not found")

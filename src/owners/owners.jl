@@ -2,15 +2,15 @@
 # Owner Type #
 ##############
 
-type Owner <: GitHubType
-    typ::Nullable{GitHubString}
-    email::Nullable{GitHubString}
-    name::Nullable{GitHubString}
-    login::Nullable{GitHubString}
-    bio::Nullable{GitHubString}
-    company::Nullable{GitHubString}
-    location::Nullable{GitHubString}
-    gravatar_id::Nullable{GitHubString}
+type Owner <: GitLabType
+    typ::Nullable{GitLabString}
+    email::Nullable{GitLabString}
+    name::Nullable{GitLabString}
+    login::Nullable{GitLabString}
+    bio::Nullable{GitLabString}
+    company::Nullable{GitLabString}
+    location::Nullable{GitLabString}
+    gravatar_id::Nullable{GitLabString}
     id::Nullable{Int}
     public_repos::Nullable{Int}
     owned_private_repos::Nullable{Int}
@@ -30,7 +30,7 @@ type Owner <: GitHubType
     site_admin::Nullable{Bool}
 end
 
-Owner(data::Dict) = json2github(Owner, data)
+Owner(data::Dict) = json2gitlab(Owner, data)
 Owner(login::AbstractString, isorg = false) = Owner(Dict("login" => login, "typ" => isorg ? "User" : "Organization"))
 
 namefield(owner::Owner) = owner.login

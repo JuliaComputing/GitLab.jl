@@ -2,34 +2,43 @@
 # Default API URIs #
 ####################
 
-const API_ENDPOINT = HttpCommon.URI("https://api.github.com/")
+## MDP const API_ENDPOINT = HttpCommon.URI("https://api.gitlab.com/")
+const API_ENDPOINT = HttpCommon.URI("http://104.197.141.88/")
 
 api_uri(path) = HttpCommon.URI(API_ENDPOINT, path = path)
 
 #######################
-# GitHub REST Methods #
+# GitLab REST Methods #
 #######################
 
-function github_request(request_method, endpoint;
+function gitlab_request(request_method, endpoint;
                         auth = AnonymousAuth(), handle_error = true,
                         headers = Dict(), params = Dict())
     authenticate_headers!(headers, auth)
-    params = github2json(params)
+    params = gitlab2json(params)
     api_endpoint = api_uri(endpoint)
     if request_method == Requests.get
         r = request_method(api_endpoint; headers = headers, query = params)
     else
+        headers["private_token"] = "$(auth.token)" ## MDP
+        ## MDP @show headers
+        ## MDP @show api_endpoint
+        ## MDP @show params
+        ## MDP @show endpoint
         r = request_method(api_endpoint; headers = headers, json = params)
     end
+    @show r
+    ## MDP @show r.headers
+    ## MDP @show String(r.data)
     handle_error && handle_response_error(r)
     return r
 end
 
-gh_get(endpoint = ""; options...) = github_request(Requests.get, endpoint; options...)
-gh_post(endpoint = ""; options...) = github_request(Requests.post, endpoint; options...)
-gh_put(endpoint = ""; options...) = github_request(Requests.put, endpoint; options...)
-gh_delete(endpoint = ""; options...) = github_request(Requests.delete, endpoint; options...)
-gh_patch(endpoint = ""; options...) = github_request(Requests.patch, endpoint; options...)
+gh_get(endpoint = ""; options...) = gitlab_request(Requests.get, endpoint; options...)
+gh_post(endpoint = ""; options...) = gitlab_request(Requests.post, endpoint; options...)
+gh_put(endpoint = ""; options...) = gitlab_request(Requests.put, endpoint; options...)
+gh_delete(endpoint = ""; options...) = gitlab_request(Requests.delete, endpoint; options...)
+gh_patch(endpoint = ""; options...) = gitlab_request(Requests.patch, endpoint; options...)
 
 gh_get_json(endpoint = ""; options...) = Requests.json(gh_get(endpoint; options...))
 gh_post_json(endpoint = ""; options...) = Requests.json(gh_post(endpoint; options...))
@@ -62,7 +71,7 @@ end
 
 extract_page_url(link) = match(r"<.*?>", link).match[2:end-1]
 
-function github_paged_get(endpoint; page_limit = Inf, start_page = "", handle_error = true,
+function gitlab_paged_get(endpoint; page_limit = Inf, start_page = "", handle_error = true,
                           headers = Dict(), params = Dict(), options...)
     if isempty(start_page)
         r = gh_get(endpoint; handle_error = handle_error, headers = headers, params = params, options...)
@@ -71,7 +80,7 @@ function github_paged_get(endpoint; page_limit = Inf, start_page = "", handle_er
         r = Requests.get(start_page, headers = headers)
     end
     results = HttpCommon.Response[r]
-    page_data = Dict{GitHubString, GitHubString}()
+    page_data = Dict{GitLabString, GitLabString}()
     if has_page_links(r)
         page_count = 1
         while page_count < page_limit
@@ -95,7 +104,8 @@ function github_paged_get(endpoint; page_limit = Inf, start_page = "", handle_er
 end
 
 function gh_get_paged_json(endpoint = ""; options...)
-    results, page_data = github_paged_get(endpoint; options...)
+    results, page_data = gitlab_paged_get(endpoint; options...)
+    @show endpoint, results, page_data ## MDP
     return mapreduce(Requests.json, vcat, results), page_data
 end
 
@@ -112,7 +122,7 @@ function handle_response_error(r::HttpCommon.Response)
             docs_url = get(data, "documentation_url", "")
             errors = get(data, "errors", "")
         end
-        error("Error found in GitHub reponse:\n",
+        error("Error found in GitLab response:\n",
               "\tStatus Code: $(r.status)\n",
               "\tMessage: $message\n",
               "\tDocs URL: $docs_url\n",

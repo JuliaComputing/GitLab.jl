@@ -2,13 +2,13 @@
 # Status type #
 ###############
 
-type Status <: GitHubType
+type Status <: GitLabType
     id::Nullable{Int}
     total_count::Nullable{Int}
-    state::Nullable{GitHubString}
-    description::Nullable{GitHubString}
-    context::Nullable{GitHubString}
-    sha::Nullable{GitHubString}
+    state::Nullable{GitLabString}
+    description::Nullable{GitLabString}
+    context::Nullable{GitLabString}
+    sha::Nullable{GitLabString}
     url::Nullable{HttpCommon.URI}
     target_url::Nullable{HttpCommon.URI}
     created_at::Nullable{Dates.DateTime}
@@ -18,7 +18,7 @@ type Status <: GitHubType
     statuses::Nullable{Vector{Status}}
 end
 
-Status(data::Dict) = json2github(Status, data)
+Status(data::Dict) = json2gitlab(Status, data)
 Status(id::Real) = Status(Dict("id" => id))
 
 namefield(status::Status) = status.id

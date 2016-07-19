@@ -2,7 +2,7 @@
 # PullRequest Type #
 ####################
 
-type PullRequest <: GitHubType
+type PullRequest <: GitLabType
     base::Nullable{Branch}
     head::Nullable{Branch}
     number::Nullable{Int}
@@ -12,10 +12,10 @@ type PullRequest <: GitHubType
     additions::Nullable{Int}
     deletions::Nullable{Int}
     changed_files::Nullable{Int}
-    state::Nullable{GitHubString}
-    title::Nullable{GitHubString}
-    body::Nullable{GitHubString}
-    merge_commit_sha::Nullable{GitHubString}
+    state::Nullable{GitLabString}
+    title::Nullable{GitLabString}
+    body::Nullable{GitLabString}
+    merge_commit_sha::Nullable{GitLabString}
     created_at::Nullable{Dates.DateTime}
     updated_at::Nullable{Dates.DateTime}
     closed_at::Nullable{Dates.DateTime}
@@ -32,7 +32,7 @@ type PullRequest <: GitHubType
     locked::Nullable{Bool}
 end
 
-PullRequest(data::Dict) = json2github(PullRequest, data)
+PullRequest(data::Dict) = json2gitlab(PullRequest, data)
 PullRequest(number::Real) = PullRequest(Dict("number" => number))
 
 namefield(pr::PullRequest) = pr.number

@@ -5,7 +5,7 @@
 abstract Authorization
 
 immutable OAuth2 <: Authorization
-    token::GitHubString
+    token::GitLabString
 end
 
 immutable AnonymousAuth <: Authorization end
@@ -17,6 +17,8 @@ immutable AnonymousAuth <: Authorization end
 function authenticate(token::AbstractString; params = Dict(), options...)
     auth = OAuth2(token)
     params["access_token"] = auth.token
+    params["private_token"] = auth.token ## MDP
+@show params
     gh_get("/"; params = params, options...)
     return auth
 end
@@ -38,5 +40,5 @@ end
 
 function Base.show(io::IO, a::OAuth2)
     token_str = a.token[1:6] * repeat("*", length(a.token) - 6)
-    print(io, "GitHub.OAuth2($token_str)")
+    print(io, "GitLab.OAuth2($token_str)")
 end

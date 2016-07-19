@@ -2,11 +2,11 @@
 # Branch Type #
 ###############
 
-type Branch <: GitHubType
-    name::Nullable{GitHubString}
-    label::Nullable{GitHubString}
-    ref::Nullable{GitHubString}
-    sha::Nullable{GitHubString}
+type Branch <: GitLabType
+    name::Nullable{GitLabString}
+    label::Nullable{GitLabString}
+    ref::Nullable{GitLabString}
+    sha::Nullable{GitLabString}
     commit::Nullable{Commit}
     user::Nullable{Owner}
     repo::Nullable{Repo}
@@ -14,7 +14,7 @@ type Branch <: GitHubType
     protection::Nullable{Dict}
 end
 
-Branch(data::Dict) = json2github(Branch, data)
+Branch(data::Dict) = json2gitlab(Branch, data)
 Branch(name::AbstractString) = Branch(Dict("name" => name))
 
 namefield(branch::Branch) = isnull(branch.name) ? branch.ref : branch.name

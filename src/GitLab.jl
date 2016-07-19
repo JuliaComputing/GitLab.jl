@@ -1,4 +1,4 @@
-module GitHub
+module GitLab
 
 using Compat
 
@@ -18,7 +18,7 @@ import HttpCommon,
 
 # include -------
 
-include("utils/GitHubType.jl")
+include("utils/GitLabType.jl")
 include("utils/auth.jl")
 include("utils/requests.jl")
 
@@ -161,4 +161,4 @@ export # events/listeners.jl
        EventListener,
        CommentListener
 
-end # module GitHub
+end # module GitLab

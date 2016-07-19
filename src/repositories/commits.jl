@@ -2,9 +2,9 @@
 # Commit Type #
 ###############
 
-type Commit <: GitHubType
-    sha::Nullable{GitHubString}
-    message::Nullable{GitHubString}
+type Commit <: GitLabType
+    sha::Nullable{GitLabString}
+    message::Nullable{GitLabString}
     author::Nullable{Owner}
     committer::Nullable{Owner}
     commit::Nullable{Commit}
@@ -17,7 +17,7 @@ type Commit <: GitHubType
     comment_count::Nullable{Int}
 end
 
-Commit(data::Dict) = json2github(Commit, data)
+Commit(data::Dict) = json2gitlab(Commit, data)
 Commit(sha::AbstractString) = Commit(Dict("sha" => sha))
 
 namefield(commit::Commit) = commit.sha
@@ -27,11 +27,13 @@ namefield(commit::Commit) = commit.sha
 ###############
 
 function commits(repo; options...)
-    results, page_data = gh_get_paged_json("/repos/$(name(repo))/commits"; options...)
+    ## MDP results, page_data = gh_get_paged_json("/repos/$(name(repo))/commits"; options...)
+    results, page_data = gh_get_paged_json("/api/v3/projects/$(repo.project_id.value)/commits"; options...)
     return map(Commit, results), page_data
 end
 
 function commit(repo, sha; options...)
-    result = gh_get_json("/repos/$(name(repo))/commits/$(name(sha))"; options...)
+    ## MDP result = gh_get_json("/repos/$(name(repo))/commits/$(name(sha))"; options...)
+    result = gh_get_json("/api/v3/projects/$(repo.project_id.value)/commits/$(name(sha))"; options...)
     return Commit(result)
 end

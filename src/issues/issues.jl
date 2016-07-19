@@ -2,13 +2,13 @@
 # Issue type #
 ##############
 
-type Issue <: GitHubType
+type Issue <: GitLabType
     id::Nullable{Int}
     number::Nullable{Int}
     comments::Nullable{Int}
-    title::Nullable{GitHubString}
-    state::Nullable{GitHubString}
-    body::Nullable{GitHubString}
+    title::Nullable{GitLabString}
+    state::Nullable{GitLabString}
+    body::Nullable{GitLabString}
     user::Nullable{Owner}
     assignee::Nullable{Owner}
     closed_by::Nullable{Owner}
@@ -26,7 +26,7 @@ type Issue <: GitHubType
     locked::Nullable{Bool}
 end
 
-Issue(data::Dict) = json2github(Issue, data)
+Issue(data::Dict) = json2gitlab(Issue, data)
 Issue(number::Real) = Issue(Dict("number" => number))
 
 namefield(issue::Issue) = issue.number

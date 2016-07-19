@@ -2,12 +2,13 @@
 # Comment Type #
 ################
 
-type Comment <: GitHubType
-    body::Nullable{GitHubString}
-    path::Nullable{GitHubString}
-    diff_hunk::Nullable{GitHubString}
-    original_commit_id::Nullable{GitHubString}
-    commit_id::Nullable{GitHubString}
+type Comment <: GitLabType
+#= MDP 
+    body::Nullable{GitLabString}
+    path::Nullable{GitLabString}
+    diff_hunk::Nullable{GitLabString}
+    original_commit_id::Nullable{GitLabString}
+    commit_id::Nullable{GitLabString}
     id::Nullable{Int}
     original_position::Nullable{Int}
     position::Nullable{Int}
@@ -19,9 +20,62 @@ type Comment <: GitHubType
     issue_url::Nullable{HttpCommon.URI}
     pull_request_url::Nullable{HttpCommon.URI}
     user::Nullable{Owner}
+=#
+
+    noteable_type::Nullable{GitLabString}
+    ## created_at::Nullable{Dates.DateTime}
+    ## created_at::Nullable{GitLabString}
+    line_code::Nullable{Int}
+    note::Nullable{GitLabString}
+    ## author_id::Nullable{Owner}
+    updated_by_id::Nullable{GitLabString}
+    noteable_id::Nullable{GitLabString}
+    commit_id::Nullable{GitLabString}
+    system::Nullable{Bool}
+    url::Nullable{HttpCommon.URI}
+    is_award::Nullable{Bool}
+    st_diff::Nullable{GitLabString}
+    id::Nullable{Int}
+    ## updated_at::Nullable{Dates.DateTime}
+    project_id::Nullable{Int}
+    attachment::Nullable{GitLabString}
+    ## type::Nullable{GitLabString}
+
+#=
+    path::Nullable{GitLabString}
+    original_commit_id::Nullable{GitLabString}
+    original_position::Nullable{Int}
+    position::Nullable{Int}
+    html_url::Nullable{HttpCommon.URI}
+    issue_url::Nullable{HttpCommon.URI}
+    pull_request_url::Nullable{HttpCommon.URI}
+    user::Nullable{Owner}
+=#
+
+
+#= 
+  "noteable_type" => "Commit"
+  "created_at"    => "2016-07-18 06:49:53 UTC"
+  "line_code"     => nothing
+  "note"          => "`sayhello(\\\"ABC\\\", \\\"cool\\\")`"
+  "author_id"     => 2
+  "updated_by_id" => nothing
+  "noteable_id"   => nothing
+  "commit_id"     => "d1d585d2fbc0c3a052e219f30504be8d1621a2a9"
+  "system"        => false
+  "url"           => "http://104.197.141.88/mdpradeep/TestProject1/commit/d1d585d2fbc0c3a052e219f30504be8d1621a2a9#note_46"
+  "is_award"      => false
+  "st_diff"       => nothing
+  "id"            => 46
+  "updated_at"    => "2016-07-18 06:49:53 UTC"
+  "project_id"    => 1
+  "attachment"    => nothing
+  "type"          => nothing
+=#
+
 end
 
-Comment(data::Dict) = json2github(Comment, data)
+Comment(data::Dict) = json2gitlab(Comment, data)
 Comment(id::Real) = Comment(Dict("id" => id))
 
 namefield(comment::Comment) = comment.id
@@ -34,11 +88,12 @@ kind_err_str(kind) = ("Error building comment request: :$kind is not a valid kin
 
 function comment(repo, item, kind = :issue; options...)
     if (kind == :issue) || (kind == :pr)
-        path = "/repos/$(name(repo))/issues/comments/$(name(item))"
+        ## MDP path = "/repos/$(name(repo))/issues/comments/$(name(item))"
+        path = "/api/v3/projects/$(repo.project_id.value)/issues/comments/$(name(item))"
     elseif kind == :review
-        path = "/repos/$(name(repo))/pulls/comments/$(name(item))"
+        path = "/api/v3/projects/$(repo.project_id.value)/pulls/comments/$(name(item))"
     elseif kind == :commit
-        path = "/repos/$(name(repo))/comments/$(name(item))"
+        path = "/api/v3/projects/$(repo.project_id.value)/comments/$(name(item))"
     else
         error(kind_err_str(kind))
     end
@@ -47,11 +102,12 @@ end
 
 function comments(repo, item, kind = :issue; options...)
     if (kind == :issue) || (kind == :pr)
-        path = "/repos/$(name(repo))/issues/$(name(item))/comments"
+        ## MDP path = "/repos/$(name(repo))/issues/$(name(item))/comments"
+        path = "/api/v3/projects/$(repo.project_id.value)/issues/$(name(item))/comments"
     elseif kind == :review
-        path = "/repos/$(name(repo))/pulls/$(name(item))/comments"
+        path = "/api/v3/projects/$(repo.project_id.value)/pulls/$(name(item))/comments"
     elseif kind == :commit
-        path = "/repos/$(name(repo))/commits/$(name(item))/comments"
+        path = "/api/v3/projects/$(repo.project_id.value)/commits/$(name(item))/comments"
     else
         error(kind_err_str(kind))
     end
@@ -61,11 +117,14 @@ end
 
 function create_comment(repo, item, kind = :issue; options...)
     if (kind == :issue) || (kind == :pr)
-        path = "/repos/$(name(repo))/issues/$(name(item))/comments"
+        ## MDP path = "/repos/$(name(repo))/issues/$(name(item))/comments"
+        path = "/api/v3/projects/$(repo.project_id.value)/issues/$(name(item))/comments"
     elseif kind == :review
-        path = "/repos/$(name(repo))/pulls/$(name(item))/comments"
+        ## MDP path = "/repos/$(name(repo))/pulls/$(name(item))/comments"
+        path = "/api/v3/projects/$(repo.project_id.value)/pulls/$(name(item))/comments"
     elseif kind == :commit
-        path = "/repos/$(name(repo))/commits/$(name(item))/comments"
+        ## MDP path = "/repos/$(name(repo))/commits/$(name(item))/comments"
+        path = "/api/v3/projects/$(repo.project_id.value)/repository/commits/$(name(item))/comments"
     else
         error(kind_err_str(kind))
     end
@@ -74,11 +133,12 @@ end
 
 function edit_comment(repo, item, kind = :issue; options...)
     if (kind == :issue) || (kind == :pr)
-        path = "/repos/$(name(repo))/issues/comments/$(name(item))"
+        ## MDP path = "/repos/$(name(repo))/issues/comments/$(name(item))"
+        path = "/api/v3/projects/$(repo.project_id.value)/issues/comments/$(name(item))"
     elseif kind == :review
-        path = "/repos/$(name(repo))/pulls/comments/$(name(item))"
+        path = "/api/v3/projects/$(repo.project_id.value)/pulls/comments/$(name(item))"
     elseif kind == :commit
-        path = "/repos/$(name(repo))/comments/$(name(item))"
+        path = "/api/v3/projects/$(repo.project_id.value)/comments/$(name(item))"
     else
         error(kind_err_str(kind))
     end
@@ -87,11 +147,11 @@ end
 
 function delete_comment(repo, item, kind = :issue; options...)
     if (kind == :issue) || (kind == :pr)
-        path = "/repos/$(name(repo))/issues/comments/$(name(item))"
+        path = "/api/v3/projects/$(repo.project_id.value)/issues/comments/$(name(item))"
     elseif kind == :review
-        path = "/repos/$(name(repo))/pulls/comments/$(name(item))"
+        path = "/api/v3/projects/$(repo.project_id.value)/pulls/comments/$(name(item))"
     elseif kind == :commit
-        path = "/repos/$(name(repo))/comments/$(name(item))"
+        path = "/api/v3/projects/$(repo.project_id.value)/comments/$(name(item))"
     else
         error(kind_err_str(kind))
     end

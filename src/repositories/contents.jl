@@ -2,15 +2,15 @@
 # Content Type #
 ################
 
-type Content <: GitHubType
-    typ::Nullable{GitHubString}
-    filename::Nullable{GitHubString}
-    name::Nullable{GitHubString}
-    path::Nullable{GitHubString}
-    target::Nullable{GitHubString}
-    encoding::Nullable{GitHubString}
-    content::Nullable{GitHubString}
-    sha::Nullable{GitHubString}
+type Content <: GitLabType
+    typ::Nullable{GitLabString}
+    filename::Nullable{GitLabString}
+    name::Nullable{GitLabString}
+    path::Nullable{GitLabString}
+    target::Nullable{GitLabString}
+    encoding::Nullable{GitLabString}
+    content::Nullable{GitLabString}
+    sha::Nullable{GitLabString}
     url::Nullable{HttpCommon.URI}
     git_url::Nullable{HttpCommon.URI}
     html_url::Nullable{HttpCommon.URI}
@@ -18,7 +18,7 @@ type Content <: GitHubType
     size::Nullable{Int}
 end
 
-Content(data::Dict) = json2github(Content, data)
+Content(data::Dict) = json2gitlab(Content, data)
 Content(path::AbstractString) = Content(Dict("path" => path))
 
 namefield(content::Content) = content.path
