@@ -1,17 +1,17 @@
 # GitLab.jl
 
-** NOTE: ** 
+### NOTE: 
 
 This is a WIP repo for providing API access to GitLab repos. The current status is as below:
 
-*** Done: ***
+### Completed:
 
 * Ability to run an event server and receive events from GitLab
 * Ability to run a comment server, receive events from GitLab and update comments on GitLab
 * Ability to set a star on a repo
 
 
-*** To Be Done: ***
+### To Be Done: 
 
 * handling comments as part of issues
 * handling comments as part of PRs
@@ -26,9 +26,9 @@ This is a WIP repo for providing API access to GitLab repos. The current status 
 [![GitLab](http://pkg.julialang.org/badges/GitLab_0.5.svg)](http://pkg.julialang.org/?pkg=GitLab)
 [![Build Status](https://travis-ci.org/JuliaComputing/GitLab.jl.svg?branch=master)](https://travis-ci.org/JuliaComputing/GitLab.jl)
 [![Build status](https://ci.appveyor.com/api/projects/status/gmlm8snv03aw5pwq/branch/master?svg=true)](https://ci.appveyor.com/project/jrevels/gitlab-jl-lj49i/branch/master)
-[![Coverage Status](https://coveralls.io/repos/JuliaComputing/GitLab.jl/badge.svg?branch=master&service=gitlab)](https://coveralls.io/github/JuliaComputing/GitLab.jl?branch=master)
+[![Coverage Status](https://coveralls.io/repos/JuliaComputing/GitLab.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/JuliaComputing/GitLab.jl?branch=master)
 
-GitLab.jl provides a Julia interface to the [GitLab API v3](https://developer.gitlab.com/v3/). Using GitLab.jl, you can do things like:
+GitLab.jl provides a Julia interface to the [GitLab API v3](http://docs.gitlab.com/ce/api/). Using GitLab.jl, you can do things like:
 
 - query for basic repository, organization, and user information
 - programmatically take user-level actions (e.g. starring a repository, commenting on an issue, etc.)
@@ -62,17 +62,17 @@ GitLab's JSON responses are parsed and returned to the caller as types of the fo
 
 Here's a table that matches up the provided `GitLabType`s with their corresponding API documentation, as well as alternative identifying values:
 
-| type          | alternative identifying property                       | link(s) to documentation                                                                                                                                                                                      |
-|---------------|--------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `Owner`       | login, e.g. `"octocat"`                                | [organizations](https://developer.gitlab.com/v3/orgs/), [users](https://developer.gitlab.com/v3/users/)                                                                                                       |
-| `Repo`        | full_name, e.g. `"JuliaComputing/GitLab.jl"`                 | [repositories](https://developer.gitlab.com/v3/repos/)                                                                                                                                                        |
-| `Commit`      | sha, e.g. `"d069993b320c57b2ba27336406f6ec3a9ae39375"` | [repository commits](https://developer.gitlab.com/v3/repos/commits/)                                                                                                                                          |
-| `Branch`      | name, e.g. `master`                                    | [repository branches](https://developer.gitlab.com/v3/repos/#get-branch)                                                                                                                                      |
-| `Content`     | path, e.g. `"src/owners/owners.jl"`                    | [repository contents](https://developer.gitlab.com/v3/repos/contents/)                                                                                                                                        |
-| `Comment`     | id, e.g. `162224613`                                   | [commit comments](https://developer.gitlab.com/v3/repos/comments/), [issue comments](https://developer.gitlab.com/v3/issues/comments/), [PR review comments](https://developer.gitlab.com/v3/pulls/comments/) |
-| `Status`      | id, e.g. `366961773`                                   | [commit statuses](https://developer.gitlab.com/v3/repos/statuses/)                                                                                                                                            |
-| `PullRequest` | number, e.g. `44`                                      | [pull requests](https://developer.gitlab.com/v3/pulls/)                                                                                                                                                       |
-| `Issue`       | number, e.g. `31`                                      | [issues](https://developer.gitlab.com/v3/issues/)                                                                                                                                                             |
+| type          | alternative identifying property                       | link(s) to documentation                                                                                                                                                                                                                        |
+|---------------|--------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Owner`       | login, e.g. `"octocat"`                                | [organizations](http://docs.gitlab.com/ce/api/projects.html), [users](http://docs.gitlab.com/ce/api/users.html)                                                                                                                                 |
+| `Repo`        | full_name, e.g. `"JuliaComputing/GitLab.jl"`           | [repositories](http://docs.gitlab.com/ce/api/repositories.html)                                                                                                                                                                                 |
+| `Commit`      | sha, e.g. `"d069993b320c57b2ba27336406f6ec3a9ae39375"` | [repository commits](http://docs.gitlab.com/ce/api/commits.html)                                                                                                                                                                                |
+| `Branch`      | name, e.g. `master`                                    | [repository branches](http://docs.gitlab.com/ce/api/branches.html)                                                                                                                                                                              |
+| `Content`     | path, e.g. `"src/owners/owners.jl"`                    | [repository contents](http://docs.gitlab.com/ce/api/projects.html)                                                                                                                                                                              |
+| `Comment`     | id, e.g. `162224613`                                   | [commit comments](http://docs.gitlab.com/ce/api/notes.html), [issue comments](http://docs.gitlab.com/ce/api/issues.html#comments-on-issues), [PR review comments](http://docs.gitlab.com/ce/api/merge_requests.html#comments-on-merge-requests) |
+| `Status`      | id, e.g. `366961773`                                   | [commit statuses](http://docs.gitlab.com/ce/api/commits.html#commit-status)                                                                                                                                                                     |
+| `PullRequest` | number, e.g. `44`                                      | [pull requests](http://docs.gitlab.com/ce/api/merge_requests.html)                                                                                                                                                                              |
+| `Issue`       | number, e.g. `31`                                      | [issues](http://docs.gitlab.com/ce/api/issues.html)                                                                                                                                                                                             |
 
 You can inspect which fields are available for a type `G<:GitLabType` by calling `fieldnames(G)`.
 
