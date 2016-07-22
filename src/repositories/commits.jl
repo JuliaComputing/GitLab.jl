@@ -3,24 +3,24 @@
 ###############
 
 type Commit <: GitLabType
-    sha::Nullable{GitLabString}
+    id::Nullable{GitLabString}
+    author_email::Nullable{GitLabString}
     message::Nullable{GitLabString}
-    author::Nullable{Owner}
-    committer::Nullable{Owner}
-    commit::Nullable{Commit}
-    url::Nullable{HttpCommon.URI}
-    html_url::Nullable{HttpCommon.URI}
-    comments_url::Nullable{HttpCommon.URI}
-    parents::Nullable{Vector{Commit}}
-    stats::Nullable{Dict}
-    files::Nullable{Vector{Content}}
-    comment_count::Nullable{Int}
+    ## committer_name::Nullable{Owner}
+    committer_name::Nullable{GitLabString}
+    ## parents::Nullable{Vector{Commit}}
+    parent_ids::Nullable{Vector{Any}}
+    authored_date::Nullable{GitLabString}
+    committer_email::Nullable{GitLabString}
+    ## author_name::Nullable{Owner}
+    author_name::Nullable{GitLabString}
+    committed_date::Nullable{GitLabString}
 end
 
 Commit(data::Dict) = json2gitlab(Commit, data)
-Commit(sha::AbstractString) = Commit(Dict("sha" => sha))
+Commit(id::AbstractString) = Commit(Dict("id" => id))
 
-namefield(commit::Commit) = commit.sha
+namefield(commit::Commit) = commit.id
 
 ###############
 # API Methods #
@@ -32,8 +32,8 @@ function commits(repo; options...)
     return map(Commit, results), page_data
 end
 
-function commit(repo, sha; options...)
-    ## MDP result = gh_get_json("/repos/$(name(repo))/commits/$(name(sha))"; options...)
-    result = gh_get_json("/api/v3/projects/$(repo.project_id.value)/commits/$(name(sha))"; options...)
+function commit(repo, id; options...)
+    ## MDP result = gh_get_json("/repos/$(name(repo))/commits/$(name(id))"; options...)
+    result = gh_get_json("/api/v3/projects/$(repo.project_id.value)/commits/$(name(id))"; options...)
     return Commit(result)
 end

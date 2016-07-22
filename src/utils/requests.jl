@@ -17,14 +17,11 @@ function gitlab_request(request_method, endpoint;
     authenticate_headers!(headers, auth)
     params = gitlab2json(params)
     api_endpoint = api_uri(endpoint)
+@show api_endpoint
     if request_method == Requests.get
         r = request_method(api_endpoint; headers = headers, query = params)
     else
         headers["private_token"] = "$(auth.token)" ## MDP
-        ## MDP @show headers
-        ## MDP @show api_endpoint
-        ## MDP @show params
-        ## MDP @show endpoint
         r = request_method(api_endpoint; headers = headers, json = params)
     end
     @show r
@@ -105,7 +102,6 @@ end
 
 function gh_get_paged_json(endpoint = ""; options...)
     results, page_data = gitlab_paged_get(endpoint; options...)
-    @show endpoint, results, page_data ## MDP
     return mapreduce(Requests.json, vcat, results), page_data
 end
 
