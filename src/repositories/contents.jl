@@ -53,7 +53,7 @@ function delete_file(repo, path; options...)
 end
 
 function readme(repo; options...)
-    result = gh_get_json("/repos/$(name(repo))/readme"; options...)
+    result = gh_get_json("/api/v3/projects/$(repo.project_id.value)/readme"; options...)
     return Content(result)
 end
 
@@ -69,7 +69,7 @@ end
 # Content Utility Methods #
 ###########################
 
-content_uri(repo, path) = "/repos/$(name(repo))/contents/$(name(path))"
+content_uri(repo, path) = "/api/v3/projects/$(repo.project_id.value)/contents/$(name(path))"
 
 function build_content_response(json::Dict)
     results = Dict()

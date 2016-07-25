@@ -113,6 +113,7 @@ function handle_event_request(request, handle;
     @show secret, request, events, auth, handle
     if !(isa(secret, Void)) && !(has_valid_secret(request, secret))
         ## MDP TODO
+        println("FIX ME !!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         ## MDP return HttpCommon.Response(400, "invalid signature")
     end
 
@@ -181,21 +182,15 @@ end
 
 function handle_comment(handle, event::WebhookEvent, auth::Authorization,
                         trigger::Regex, check_collab::Bool)
-@show event
     kind, payload = event.kind, event.payload
 
-@show kind
-@show payload
     if (kind == "pull_request" || kind == "issues") && payload["action"] == "opened"
         body_container = kind == "issues" ? payload["issue"] : payload["pull_request"]
-    ## MDP elseif haskey(payload, "comment")
-        ## MDP body_container = payload["comment"]
     elseif haskey(payload, "object_attributes")
         body_container = payload["object_attributes"]
     else
         return HttpCommon.Response(204, "payload does not contain comment")
     end
-@show body_container
 
     if check_collab
         repo = event.repository
@@ -206,10 +201,8 @@ function handle_comment(handle, event::WebhookEvent, auth::Authorization,
         end
     end
 
-@show trigger
     ## MDP trigger_match = match(trigger, body_container["body"])
     trigger_match = match(trigger, body_container["note"])
-@show trigger_match
 
     if trigger_match == nothing
         return HttpCommon.Response(204, "trigger match not found")

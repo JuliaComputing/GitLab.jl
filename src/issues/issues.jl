@@ -36,21 +36,21 @@ namefield(issue::Issue) = issue.number
 ###############
 
 function issue(repo, issue_obj; options...)
-    result = gh_get_json("/repos/$(name(repo))/issues/$(name(issue_obj))"; options...)
+    result = gh_get_json("/api/v3/projects/$(repo.project_id.value)/issues/$(name(issue_obj))"; options...)
     return Issue(result)
 end
 
 function issues(repo; options...)
-    results, page_data = gh_get_paged_json("/repos/$(name(repo))/issues"; options...)
+    results, page_data = gh_get_paged_json("/api/v3/projects/$(repo.project_id.value)/issues"; options...)
     return map(Issue, results), page_data
 end
 
 function create_issue(repo; options...)
-    result = gh_post_json("/repos/$(name(repo))/issues"; options...)
+    result = gh_post_json("/api/v3/projects/$(repo.project_id.value)/issues"; options...)
     return Issue(result)
 end
 
 function edit_issue(repo, issue; options...)
-    result = gh_patch_json("/repos/$(name(repo))/issues/$(name(issue))"; options...)
+    result = gh_patch_json("/api/v3/projects/$(repo.project_id.value)/issues/$(name(issue))"; options...)
     return Issue(result)
 end

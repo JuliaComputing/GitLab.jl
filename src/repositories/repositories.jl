@@ -54,7 +54,8 @@ namefield(repo::Repo) = repo.name
 #-------#
 
 function repo(repo_obj; options...)
-    result = gh_get_json("/repos/$(name(repo_obj))"; options...)
+    ## result = gh_get_json("/repos/$(name(repo_obj))"; options...)
+    result = gh_get_json("/api/v3/projects/$(repo.project_id.value)"; options...)
     return Repo(result)
 end
 
@@ -62,12 +63,14 @@ end
 #-------#
 
 function forks(repo; options...)
-    results, page_data = gh_get_paged_json("/repos/$(name(repo))/forks"; options...)
+    ## results, page_data = gh_get_paged_json("/repos/$(name(repo))/forks"; options...)
+    results, page_data = gh_get_paged_json("/api/v3/projects/$(repo.project_id.value)/forks"; options...)
     return map(Repo, results), page_data
 end
 
 function create_fork(repo; options...)
-    result = gh_post_json("/repos/$(name(repo))/forks"; options...)
+    ## result = gh_post_json("/repos/$(name(repo))/forks"; options...)
+    result = gh_post_json("/api/v3/projects/$(repo.project_id.value)/forks"; options...)
     return Repo(result)
 end
 
@@ -75,33 +78,25 @@ end
 #----------------------------#
 
 function contributors(repo; options...)
-    results, page_data = gh_get_paged_json("/repos/$(name(repo))/contributors"; options...)
+    ## results, page_data = gh_get_paged_json("/repos/$(name(repo))/contributors"; options...)
+    results, page_data = gh_get_paged_json("/api/v3/projects/$(repo.project_id.value)/contributors"; options...)
     results = [Dict("contributor" => Owner(i), "contributions" => i["contributions"]) for i in results]
     return results, page_data
 end
 
 function collaborators(repo; options...)
     ## MDP results, page_data = gh_get_json("/repos/$(name(repo))/collaborators"; options...)
-    ## http://104.197.141.88/api/v3/projects/:id/repository/contributors
-    results = gh_get_json("/api/v3/projects/$(name(repo))/repository/contributors"; options...)
-    @show results
-    ## results, page_data = gh_get_json("/api/v3/projects/$(name(repo))/repository/contributors"; options...)
-    ## return map(Owner, results), page_data
-    return map(Owner, results)
+    results, page_data = gh_get_json("/api/v3/projects/$(repo.project_id.value)/repository/contributors"; options...)
+    return map(Owner, results), page_data
 end
 
 function iscollaborator(repo, user; options...)
     ## MDP path = "/repos/$(name(repo))/collaborators/$(name(user))"
-## @show repo
-## @show user
-    path = "/api/v3/projects/$(name(repo))/repository/contributors/$(name(user))"
+    path = "/api/v3/projects/$(repo.project_id.value)/repository/contributors/$(name(user))"
     r = gh_get(path; handle_error = false, options...)
     @show r
 
-## MDP Currently there seems to be no easy way to check this. We may need to compare email ids ?
-## MDP For now return true !
-return true
-    r.status == 204 && return true
+    r.status <= 204 && return true
     r.status == 404 && return false
     handle_response_error(r)  # 404 is not an error in this case
     return false

@@ -42,11 +42,11 @@ namefield(pr::PullRequest) = pr.number
 ###############
 
 function pull_requests(repo; options...)
-    results, page_data = gh_get_paged_json("/repos/$(name(repo))/pulls"; options...)
+    results, page_data = gh_get_paged_json("/api/v3/projects/$(repo.project_id.value)/pulls"; options...)
     return map(PullRequest, results), page_data
 end
 
 function pull_request(repo, pr; options...)
-    result = gh_get_json("/repos/$(name(repo))/pulls/$(name(pr))"; options...)
+    result = gh_get_json("/api/v3/projects/$(repo.project_id.value)/pulls/$(name(pr))"; options...)
     return PullRequest(result)
 end

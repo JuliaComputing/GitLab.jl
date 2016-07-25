@@ -26,11 +26,12 @@ function gitlab_request(request_method, endpoint;
     end
     @show r
     ## MDP @show r.headers
-    ## MDP @show String(r.data)
+    @show UTF8String(r.data)
     handle_error && handle_response_error(r)
     return r
 end
 
+gh_get(endpoint = ""; options...) = gitlab_request(Requests.get, endpoint; options...)
 gh_get(endpoint = ""; options...) = gitlab_request(Requests.get, endpoint; options...)
 gh_post(endpoint = ""; options...) = gitlab_request(Requests.post, endpoint; options...)
 gh_put(endpoint = ""; options...) = gitlab_request(Requests.put, endpoint; options...)
@@ -77,6 +78,7 @@ function gitlab_paged_get(endpoint; page_limit = Inf, start_page = "", handle_er
         r = Requests.get(start_page, headers = headers)
     end
     results = HttpCommon.Response[r]
+@show UTF8String(results[1].data)
     page_data = Dict{GitLabString, GitLabString}()
     if has_page_links(r)
         page_count = 1

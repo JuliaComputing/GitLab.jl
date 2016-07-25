@@ -16,9 +16,8 @@ immutable AnonymousAuth <: Authorization end
 
 function authenticate(token::AbstractString; params = Dict(), options...)
     auth = OAuth2(token)
-    params["access_token"] = auth.token
+    ## params["access_token"] = auth.token
     params["private_token"] = auth.token ## MDP
-@show params
     gh_get("/"; params = params, options...)
     return auth
 end

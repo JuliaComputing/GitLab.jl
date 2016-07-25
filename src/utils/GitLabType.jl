@@ -90,7 +90,6 @@ end
         key = field == :typ ? "type" : string(field)
         args[i] = :(extract_nullable(data, $key, $T))
     end
-@show args
     return :(G($(args...))::G)
 end
 
