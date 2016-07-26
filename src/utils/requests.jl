@@ -21,7 +21,7 @@ function gitlab_request(request_method, endpoint;
     if request_method == Requests.get
         r = request_method(api_endpoint; headers = headers, query = params)
     else
-        headers["private_token"] = "$(auth.token)" ## MDP
+        ## headers["private_token"] = "$(auth.token)" ## MDP
         r = request_method(api_endpoint; headers = headers, json = params)
     end
     @show r
@@ -78,7 +78,6 @@ function gitlab_paged_get(endpoint; page_limit = Inf, start_page = "", handle_er
         r = Requests.get(start_page, headers = headers)
     end
     results = HttpCommon.Response[r]
-@show UTF8String(results[1].data)
     page_data = Dict{GitLabString, GitLabString}()
     if has_page_links(r)
         page_count = 1

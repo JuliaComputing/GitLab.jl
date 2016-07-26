@@ -2,20 +2,28 @@
 # Content Type #
 ################
 
+
+
 type Content <: GitLabType
-    typ::Nullable{GitLabString}
-    filename::Nullable{GitLabString}
-    name::Nullable{GitLabString}
-    path::Nullable{GitLabString}
-    target::Nullable{GitLabString}
+    file_name::Nullable{GitLabString}
+    file_path::Nullable{GitLabString}
+    size::Nullable{Int}
     encoding::Nullable{GitLabString}
     content::Nullable{GitLabString}
-    sha::Nullable{GitLabString}
+    ref::Nullable{GitLabString}
+    blob_id::Nullable{GitLabString}
+    commit_id::Nullable{GitLabString}
+    last_commit_id::Nullable{GitLabString}
+
+#=
+    typ::Nullable{GitLabString}
+    name::Nullable{GitLabString}
+    target::Nullable{GitLabString}
     url::Nullable{HttpCommon.URI}
     git_url::Nullable{HttpCommon.URI}
     html_url::Nullable{HttpCommon.URI}
     download_url::Nullable{HttpCommon.URI}
-    size::Nullable{Int}
+=#
 end
 
 Content(data::Dict) = json2gitlab(Content, data)
@@ -27,8 +35,8 @@ namefield(content::Content) = content.path
 # API Methods #
 ###############
 
-function file(repo, path; options...)
-    result = gh_get_json(content_uri(repo, path); options...)
+function file(repo, path, ref; options...)
+    result = gh_get_json(content_uri(repo, path, ref); options...)
     return Content(result)
 end
 
@@ -69,9 +77,13 @@ end
 # Content Utility Methods #
 ###########################
 
-content_uri(repo, path) = "/api/v3/projects/$(repo.project_id.value)/contents/$(name(path))"
+## content_uri(repo, path) = "/api/v3/projects/$(repo.project_id.value)/contents/$(name(path))"
+## content_uri(repo, path) = "/api/v3/projects/$(repo.project_id.value)/files"
+content_uri(repo, path, ref) = "/api/v3/projects/$(repo.project_id.value)/repository/files?file_path=$(name(path))&ref=$(name(ref))"
+content_uri(repo, path) = "/api/v3/projects/$(repo.project_id.value)/repository/files?file_path=$(name(path))"
 
 function build_content_response(json::Dict)
+@show json
     results = Dict()
     haskey(json, "commit") && setindex!(results, Commit(json["commit"]), "commit")
     haskey(json, "content") && setindex!(results, Content(json["content"]), "content")

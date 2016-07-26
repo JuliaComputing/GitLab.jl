@@ -33,11 +33,13 @@ function create_status(repo, sha; options...)
 end
 
 function statuses(repo, ref; options...)
-    results, page_data = gh_get_paged_json("/api/v3/projects/$(repo.project_id.value)/commits/$(name(ref))/statuses"; options...)
+    results, page_data = gh_get_paged_json("/api/v3/projects/$(repo.project_id.value)/repository/commits/$(name(ref))/statuses"; options...)
     return map(Status, results), page_data
 end
 
+#= TODO: no equivalent API
 function status(repo, ref; options...)
     result = gh_get_json("/api/v3/projects/$(repo.project_id.value)/commits/$(name(ref))/status"; options...)
     return Status(result)
 end
+=#

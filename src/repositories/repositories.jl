@@ -3,40 +3,46 @@
 #############
 
 type Repo <: GitLabType
-    #=
-    full_name::Nullable{GitLabString}
-    language::Nullable{GitLabString}
-    default_branch::Nullable{GitLabString}
-    owner::Nullable{Owner}
-    parent::Nullable{Repo}
-    source::Nullable{Repo}
-    size::Nullable{Int}
-    subscribers_count::Nullable{Int}
-    forks_count::Nullable{Int}
-    stargazers_count::Nullable{Int}
-    watchers_count::Nullable{Int}
-    open_issues_count::Nullable{Int}
-    html_url::Nullable{HttpCommon.URI}
-    pushed_at::Nullable{Dates.DateTime}
-    created_at::Nullable{Dates.DateTime}
-    updated_at::Nullable{Dates.DateTime}
-    has_issues::Nullable{Bool}
-    has_wiki::Nullable{Bool}
-    has_downloads::Nullable{Bool}
-    has_pages::Nullable{Bool}
-    private::Nullable{Bool}
-    fork::Nullable{Bool}
-    permissions::Nullable{Dict}
-    =#
-
     name::Nullable{GitLabString}
     visibility_level::Nullable{Int}
     homepage::Nullable{HttpCommon.URI}
     git_http_url::Nullable{HttpCommon.URI}
-    ## url::Nullable{HttpCommon.URI}
     description::Nullable{GitLabString}
-    ## git_ssh_url::Nullable{HttpCommon.URI}
     project_id::Nullable{Int}
+
+    id::Nullable{Int}
+    default_branch::Nullable{GitLabString}
+    tag_list::Nullable{Vector{GitLabString}}
+    public::Nullable{Bool}
+    archived::Nullable{Bool}
+    ## TODO FIX ssh_url_to_repo::Nullable{HttpCommon.URI}
+    http_url_to_repo::Nullable{HttpCommon.URI}
+    web_url::Nullable{HttpCommon.URI}
+    owner::Nullable{Owner}
+    name_with_namespace::Nullable{GitLabString}
+    path::Nullable{GitLabString}
+    path_with_namespace::Nullable{GitLabString}
+    issues_enabled::Nullable{Bool}
+    merge_requests_enabled::Nullable{Bool}
+    wiki_enabled::Nullable{Bool}
+    builds_enabled::Nullable{Bool}
+    snippets_enabled::Nullable{Bool}
+    container_registry_enabled::Nullable{Bool}
+    created_at::Nullable{Dates.DateTime}
+    last_activity_at::Nullable{Dates.DateTime}
+    shared_runners_enabled::Nullable{Bool}
+    creator_id::Nullable{Int}
+    ## TODO FIX namespace::Nullable{Namespace}
+    ## \"namespace\":{\"id\":2,\"name\":\"mdpradeep\",\"path\":\"mdpradeep\",\"owner_id\":2,\"created_at\":\"2016-06-17T07:09:56.494Z\",\"updated_at\":\"2016-06-17T07:09:56.494Z\",\"description\":\"\",\"avatar\":null,\"share_with_group_lock\":false,\"visibility_level\":20}
+    avatar_url::Nullable{HttpCommon.URI}
+    star_count::Nullable{Int}
+    forks_count::Nullable{Int}
+    open_issues_count::Nullable{Int}
+    runners_token::Nullable{GitLabString}
+    public_builds::Nullable{Bool}
+    ## TODO permissions::Nullable{Permissions}
+    ## \"permissions\":{\"project_access\":{\"access_level\":40,\"notification_level\":3},\"group_access\":null}
+
 end
 
 Repo(data::Dict) = json2gitlab(Repo, data)
@@ -55,7 +61,7 @@ namefield(repo::Repo) = repo.name
 
 function repo(repo_obj; options...)
     ## result = gh_get_json("/repos/$(name(repo_obj))"; options...)
-    result = gh_get_json("/api/v3/projects/$(repo.project_id.value)"; options...)
+    result = gh_get_json("/api/v3/projects/$(repo_obj.project_id.value)"; options...)
     return Repo(result)
 end
 
@@ -63,6 +69,8 @@ end
 #-------#
 
 function forks(repo; options...)
+    error("Not implemented yet !!")
+## TODO
     ## results, page_data = gh_get_paged_json("/repos/$(name(repo))/forks"; options...)
     results, page_data = gh_get_paged_json("/api/v3/projects/$(repo.project_id.value)/forks"; options...)
     return map(Repo, results), page_data
@@ -70,7 +78,13 @@ end
 
 function create_fork(repo; options...)
     ## result = gh_post_json("/repos/$(name(repo))/forks"; options...)
-    result = gh_post_json("/api/v3/projects/$(repo.project_id.value)/forks"; options...)
+    result = gh_post_json("/api/v3/projects/fork/$(repo.id.value)"; options...)
+    return Repo(result)
+end
+
+function delete_fork(repo; options...)
+    ## /projects/:id/fork
+    result = gh_delete_json("/api/v3/projects/$(repo.id.value)/fork"; options...)
     return Repo(result)
 end
 
@@ -79,47 +93,65 @@ end
 
 function contributors(repo; options...)
     ## results, page_data = gh_get_paged_json("/repos/$(name(repo))/contributors"; options...)
-    results, page_data = gh_get_paged_json("/api/v3/projects/$(repo.project_id.value)/contributors"; options...)
-    results = [Dict("contributor" => Owner(i), "contributions" => i["contributions"]) for i in results]
+    results, page_data = gh_get_paged_json("/api/v3/projects/$(repo.project_id.value)/repository/contributors"; options...)
+    results = [Dict("contributor" => Owner(i), "contributions" => i["commits"]) for i in results]
     return results, page_data
 end
 
 function collaborators(repo; options...)
     ## MDP results, page_data = gh_get_json("/repos/$(name(repo))/collaborators"; options...)
-    results, page_data = gh_get_json("/api/v3/projects/$(repo.project_id.value)/repository/contributors"; options...)
-    return map(Owner, results), page_data
+    ## MDP results, page_data = gh_get_json("/api/v3/projects/$(repo.project_id.value)/repository/contributors"; options...)
+    ## results, page_data = gh_get_paged_json("/api/v3/projects/$(repo.project_id.value)/members"; options...)
+    results = gh_get_json("/api/v3/projects/$(repo.project_id.value)/members"; options...)
+    return map(Owner, results)
 end
 
 function iscollaborator(repo, user; options...)
+    collaborators = GitLab.collaborators(repo; options...)
+    for c in collaborators
+        if c.username.value == user
+            return true
+        end
+    end
+
+    #= The following API works only with ID !
     ## MDP path = "/repos/$(name(repo))/collaborators/$(name(user))"
-    path = "/api/v3/projects/$(repo.project_id.value)/repository/contributors/$(name(user))"
+    ## path = "/api/v3/projects/$(repo.project_id.value)/repository/contributors/$(name(user))"
+
+    path = "/api/v3/projects/$(repo.project_id.value)/members/$ID"
     r = gh_get(path; handle_error = false, options...)
     @show r
 
     r.status <= 204 && return true
     r.status == 404 && return false
     handle_response_error(r)  # 404 is not an error in this case
+    =#
     return false
 end
 
 function add_collaborator(repo, user; options...)
     ## MDP path = "/repos/$(name(repo))/collaborators/$(name(user))"
-    path = "/api/v3/projects/$(repo.project_id.value)/repository/contributors/$(name(user))"
-    return gh_put(path; options...)
+    ## path = "/api/v3/projects/$(repo.project_id.value)/members/$(user)"
+    ## return gh_put(path; options...)
+    path = "/api/v3/projects/$(repo.project_id.value)/members"
+    return gh_post(path; options...)
 end
 
 function remove_collaborator(repo, user; options...)
     ## MDP path = "/repos/$(name(repo))/collaborators/$(name(user))"
-    path = "/api/v3/projects/$(repo.project_id.value)/repository/contributors/$(name(user))"
+    ## path = "/api/v3/projects/$(repo.project_id.value)/repository/contributors/$(name(user))"
+    path = "/api/v3/projects/$(repo.project_id.value)/members/$(user)"
     return gh_delete(path; options...)
 end
 
 # stats #
 #-------#
 
+## TODO Check how to enable sidekiq stats !
 function stats(repo, stat, attempts = 3; options...)
     ## MDP path = "/repos/$(name(repo))/stats/$(name(stat))"
-    path = "/api/v3/projects/$(repo.project_id.value)/repository/stats/$(name(stat))"
+    ## path = "/api/v3/projects/$(repo.project_id.value)/repository/stats/$(name(stat))"
+    path = "/api/v3/projects/sidekiq/$(name(stat))"
     local r
     for a in 1:attempts
         r = gh_get(path; handle_error = false, options...)
