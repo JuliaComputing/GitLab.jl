@@ -196,7 +196,7 @@ function handle_comment(handle, event::WebhookEvent, auth::Authorization,
         repo = event.repository
         ## MDP user = body_container["user"]["login"]
         user = payload["user"]["username"]
-        if !(iscollaborator(repo, user; auth = auth))
+        if !(iscollaborator(repo, user; params = Dict("private_token" => auth.token)))
             return HttpCommon.Response(204, "commenter is not collaborator")
         end
     end
