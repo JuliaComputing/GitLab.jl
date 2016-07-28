@@ -28,7 +28,15 @@ listener = GitLab.CommentListener(trigger; auth = myauth) do event, phrase
     ## @show comment
 
     results = include(Pkg.dir(pkg_name, "benchmarks", "runbenchmarks.jl"))
-    final_results = "$(results["calculus"]) \n $(results["calculus"]["test"])\n"
+    if isa(results, BenchmarkTools.BenchmarkGroup)
+        if haskey(results, "calculus")
+            final_results = "$(results["calculus"]) \n $(results["calculus"]["test"])\n"
+        else
+            final_results = Base.show(results)
+        end
+    else
+        final_results = results
+    end
     @show final_results
 
     if event.payload["object_attributes"]["noteable_type"] == "Issue"
