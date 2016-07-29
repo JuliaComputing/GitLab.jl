@@ -27,9 +27,9 @@ type Content <: GitLabType
 end
 
 Content(data::Dict) = json2gitlab(Content, data)
-Content(path::AbstractString) = Content(Dict("path" => path))
+Content(file_path::AbstractString) = Content(Dict("file_path" => file_path))
 
-namefield(content::Content) = content.path
+namefield(content::Content) = content.file_path
 
 ###############
 # API Methods #

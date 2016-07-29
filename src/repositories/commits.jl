@@ -5,8 +5,9 @@
 type Commit <: GitLabType
     id::Nullable{GitLabString}
     author_email::Nullable{GitLabString}
+    title::Nullable{GitLabString}
+    short_id::Nullable{GitLabString}
     message::Nullable{GitLabString}
-    ## committer_name::Nullable{Owner}
     committer_name::Nullable{GitLabString}
     ## parents::Nullable{Vector{Commit}}
     parent_ids::Nullable{Vector{Any}}
@@ -15,6 +16,7 @@ type Commit <: GitLabType
     ## author_name::Nullable{Owner}
     author_name::Nullable{GitLabString}
     committed_date::Nullable{GitLabString}
+    created_at::Nullable{GitLabString}
 end
 
 Commit(data::Dict) = json2gitlab(Commit, data)

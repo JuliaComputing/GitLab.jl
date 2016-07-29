@@ -3,8 +3,6 @@
 ##############
 
 type Issue <: GitLabType
-## {\"id\":3,\"iid\":3,\"project_id\":1,\"title\":\"Test Issue ...\",\"description\":\"fix XYZ\",\"state\":\"opened\",\"created_at\":\"2016-07-21T12:07:26.632Z\",\"updated_at\":\"2016-07-21T12:08:42.755Z\",\"labels\":[],\"milestone\":null,\"assignee\":null,\"author\":{\"name\":\"Pradeep\",\"username\":\"mdpradeep\",\"id\":2,\"state\":\"active\",\"avatar_url\":\"http://www.gravatar.com/avatar/a3918c0a2d98a6606bd787c54e6e5268?s=80\\u0026d=identicon\",\"web_url\":\"http://104.197.141.88/u/mdpradeep\"},\"subscribed\":true,\"user_notes_count\":2}
-
     id::Nullable{Int}
     iid::Nullable{Int}
     project_id::Nullable{Int}
@@ -37,7 +35,7 @@ end
 Issue(data::Dict) = json2gitlab(Issue, data)
 Issue(id::Int) = Issue(Dict("id" => id))
 
-namefield(issue::Issue) = issue.number
+namefield(issue::Issue) = issue.id
 
 ###############
 # API Methods #

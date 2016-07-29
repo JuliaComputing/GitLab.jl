@@ -1,12 +1,12 @@
-using GitHub, GitHub.name
+using GitLab, GitLab.name
 using Base.Test
 
-# The below tests are network-dependent, and actually make calls to GitHub's
+# The below tests are network-dependent, and actually make calls to GitLab's
 # API. They're all read-only, meaning none of them require authentication.
 
-testuser = Owner("julia-github-test-bot")
-julweb = Owner("JuliaWeb", true)
-ghjl = Repo("JuliaWeb/GitHub.jl")
+testuser = Owner("julia-gitlab-test-bot")
+julweb = Owner("JuliaComputing", true)
+ghjl = Repo("JuliaComputing/GitLab.jl")
 testcommit = Commit("3a90e7d64d6184b877f800570155c502b1119c15")
 
 hasghobj(obj, items) = any(x -> name(x) == name(obj), items)
@@ -27,61 +27,61 @@ auth = authenticate(string(circshift(["bcc", "3fc", "03a", "33e",
 # Owners #
 ##########
 
-# test GitHub.owner
+# test GitLab.owner
 @test name(owner(testuser; auth = auth)) == name(testuser)
 @test name(owner(julweb; auth = auth)) == name(julweb)
 
-# test GitHub.orgs
-@test hasghobj("JuliaWeb", first(orgs("jrevels"; auth = auth)))
+# test GitLab.orgs
+@test hasghobj("JuliaComputing", first(orgs("jrevels"; auth = auth)))
 
-# test GitHub.followers, GitHub.following
+# test GitLab.followers, GitLab.following
 @test hasghobj("jrevels", first(followers(testuser; auth = auth)))
 @test hasghobj("jrevels", first(following(testuser; auth = auth)))
 
-# test GitHub.repos
+# test GitLab.repos
 @test hasghobj(ghjl, first(repos(julweb; auth = auth)))
 
 ################
 # Repositories #
 ################
 
-# test GitHub.repo
+# test GitLab.repo
 @test name(repo(ghjl; auth = auth)) == name(ghjl)
 
-# test GitHub.forks
+# test GitLab.forks
 @test length(first(forks(ghjl; auth = auth))) > 0
 
-# test GitHub.contributors
+# test GitLab.contributors
 @test hasghobj("jrevels", map(x->x["contributor"], first(contributors(ghjl; auth = auth))))
 
-# test GitHub.stats
+# test GitLab.stats
 @test stats(ghjl, "contributors"; auth = auth).status < 300
 
-# test GitHub.branch, GitHub.branches
+# test GitLab.branch, GitLab.branches
 @test name(branch(ghjl, "master"; auth = auth)) == "master"
 @test hasghobj("master", first(branches(ghjl; auth = auth)))
 
-# test GitHub.commit, GitHub.commits
+# test GitLab.commit, GitLab.commits
 @test name(commit(ghjl, testcommit; auth = auth)) == name(testcommit)
 @test hasghobj(testcommit, first(commits(ghjl; auth = auth)))
 
-# test GitHub.file, GitHub.directory, GitHub.readme, GitHub.permalink
+# test GitLab.file, GitLab.directory, GitLab.readme, GitLab.permalink
 readme_file = file(ghjl, "README.md"; auth = auth)
 src_dir = first(directory(ghjl, "src"; auth = auth))
 owners_dir = src_dir[findfirst(c -> get(c.path) == "src/owners", src_dir)]
 test_sha = "eab14e1ab7b4de848ef6390101b6d40b489d5d08"
 readme_permalink = string(permalink(readme_file, test_sha))
 owners_permalink = string(permalink(owners_dir, test_sha))
-@test readme_permalink == "https://github.com/JuliaWeb/GitHub.jl/blob/$(test_sha)/README.md"
-@test owners_permalink == "https://github.com/JuliaWeb/GitHub.jl/tree/$(test_sha)/src/owners"
+@test readme_permalink == "https://github.com/JuliaComputing/GitLab.jl/blob/$(test_sha)/README.md"
+@test owners_permalink == "https://github.com/JuliaComputing/GitLab.jl/tree/$(test_sha)/src/owners"
 @test readme_file == readme(ghjl; auth = auth)
-@test hasghobj("src/GitHub.jl", src_dir)
+@test hasghobj("src/GitLab.jl", src_dir)
 
-# test GitHub.status, GitHub.statuses
+# test GitLab.status, GitLab.statuses
 @test get(status(ghjl, testcommit; auth = auth).sha) == name(testcommit)
 @test !(isempty(first(statuses(ghjl, testcommit; auth = auth))))
 
-# test GitHub.comment, GitHub.comments
+# test GitLab.comment, GitLab.comments
 @test name(comment(ghjl, 154431956; auth = auth)) == 154431956
 @test !(isempty(first(comments(ghjl, 40; auth = auth))))
 
@@ -95,11 +95,11 @@ owners_permalink = string(permalink(owners_dir, test_sha))
 
 state_param = Dict("state" => "all")
 
-# test GitHub.pull_request, GitHub.pull_requests
+# test GitLab.pull_request, GitLab.pull_requests
 @test get(pull_request(ghjl, 37; auth = auth).title) == "Fix dep warnings"
 @test hasghobj(37, first(pull_requests(ghjl; auth = auth, params = state_param)))
 
-# test GitHub.issue, GitHub.issues
+# test GitLab.issue, GitLab.issues
 @test get(issue(ghjl, 40; auth = auth).title) == "Needs test"
 @test hasghobj(40, first(issues(ghjl; auth = auth, params = state_param)))
 
@@ -107,10 +107,10 @@ state_param = Dict("state" => "all")
 # Activity #
 ############
 
-# test GitHub.stargazers, GitHub.starred
+# test GitLab.stargazers, GitLab.starred
 @test length(first(stargazers(ghjl; auth = auth))) > 10 # every package should fail tests if it's not popular enough :p
 @test hasghobj(ghjl, first(starred(testuser; auth = auth)))
 
-# test GitHub.watched, GitHub.watched
+# test GitLab.watched, GitLab.watched
 @test hasghobj(testuser, first(watchers(ghjl; auth = auth)))
 @test hasghobj(ghjl, first(watched(testuser; auth = auth)))

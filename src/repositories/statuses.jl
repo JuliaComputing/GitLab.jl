@@ -14,8 +14,17 @@ type Status <: GitLabType
     created_at::Nullable{Dates.DateTime}
     updated_at::Nullable{Dates.DateTime}
     creator::Nullable{Owner}
-    repository::Nullable{Repo}
+    repository::Nullable{Repo} 
     statuses::Nullable{Vector{Status}}
+
+    ## For commit status
+    status::Nullable{GitLabString}
+    name::Nullable{GitLabString}
+    author::Nullable{Owner}
+    ref::Nullable{GitLabString}
+    started_at::Nullable{Dates.DateTime}
+    finished_at::Nullable{Dates.DateTime}
+    allow_failure::Nullable{Bool}
 end
 
 Status(data::Dict) = json2gitlab(Status, data)

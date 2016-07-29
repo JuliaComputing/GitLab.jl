@@ -10,7 +10,7 @@ type Owner <: GitLabType
     state::Nullable{GitLabString}
     avatar_url::Nullable{HttpCommon.URI}
     web_url::Nullable{HttpCommon.URI}
-    typ::Nullable{GitLabString}
+    ownership_type::Nullable{GitLabString}
 
 #=
     email::Nullable{GitLabString}
@@ -36,7 +36,7 @@ type Owner <: GitLabType
 end
 
 Owner(data::Dict) = json2gitlab(Owner, data)
-Owner(username::AbstractString, isorg = false) = Owner(Dict("username" => username, "typ" => isorg ? "User" : "Organization"))
+Owner(username::AbstractString, isorg = false) = Owner(Dict("username" => username, "ownership_type" => isorg ? "User" : "Organization"))
 ## Owner(username::AbstractString) = Owner(Dict("username" => username))
 
 namefield(owner::Owner) = owner.username
@@ -48,7 +48,7 @@ typprefix(isorg) = isorg ? "projects" : "users"
 # Owner API #
 #############
 
-isorg(owner::Owner) = get(owner.typ, "") == "Organization"
+isorg(owner::Owner) = get(owner.ownership_type, "") == "Organization"
 
 owner(owner_obj::Owner; options...) = owner(name(owner_obj), isorg(owner_obj); options...)
 

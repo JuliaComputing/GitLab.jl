@@ -3,31 +3,12 @@
 ################
 
 type Comment <: GitLabType
-#= MDP 
-    body::Nullable{GitLabString}
-    path::Nullable{GitLabString}
-    diff_hunk::Nullable{GitLabString}
-    original_commit_id::Nullable{GitLabString}
-    commit_id::Nullable{GitLabString}
-    id::Nullable{Int}
-    original_position::Nullable{Int}
-    position::Nullable{Int}
-    line::Nullable{Int}
-    created_at::Nullable{Dates.DateTime}
-    updated_at::Nullable{Dates.DateTime}
-    url::Nullable{HttpCommon.URI}
-    html_url::Nullable{HttpCommon.URI}
-    issue_url::Nullable{HttpCommon.URI}
-    pull_request_url::Nullable{HttpCommon.URI}
-    user::Nullable{Owner}
-=#
-
     noteable_type::Nullable{GitLabString}
     ## created_at::Nullable{Dates.DateTime}
     created_at::Nullable{GitLabString}
     line_code::Nullable{Int64}
     note::Nullable{GitLabString}
-    ## author_id::Nullable{Owner}
+    author::Nullable{Owner}
     author_id::Nullable{Int64}
     updated_by_id::Nullable{GitLabString}
     noteable_id::Nullable{Int64}
@@ -42,9 +23,11 @@ type Comment <: GitLabType
     project_id::Nullable{Int64}
     attachment::Nullable{GitLabString}
     ## type::Nullable{GitLabString}
+    path::Nullable{GitLabString}
+    line::Nullable{GitLabString}
+    line_type::Nullable{GitLabString}
 
 #=
-    path::Nullable{GitLabString}
     original_commit_id::Nullable{GitLabString}
     original_position::Nullable{Int}
     position::Nullable{Int}
@@ -55,6 +38,24 @@ type Comment <: GitLabType
 =#
 
 #= 
+    ## Issue comment
+    {   
+        "note": "Test ...",
+        "path": null,
+        "line": null,
+        "line_type": null,
+        "author": {
+          "name": "Pradeep",
+          "username": "mdpradeep",
+          "id": 2, 
+          "state": "active",
+          "avatar_url": "http://www.gravatar.com/avatar/7e32a35a20817e0258e12665c9099422?s=80&d=identicon",
+          "web_url": "http://104.197.141.88/u/mdpradeep"
+        },
+        "created_at": "2016-07-16T16:02:12.923Z"
+    }
+
+
     ## Merge request comment
   "noteable_type" => "MergeRequest"
   "created_at"    => "2016-07-19 09:45:27 UTC"
@@ -97,7 +98,7 @@ type Comment <: GitLabType
 end
 
 Comment(data::Dict) = json2gitlab(Comment, data)
-Comment(id::Real) = Comment(Dict("id" => id))
+Comment(id::Int) = Comment(Dict("id" => id))
 
 namefield(comment::Comment) = comment.id
 
