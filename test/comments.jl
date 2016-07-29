@@ -28,19 +28,9 @@ listener = GitLab.CommentListener(trigger; auth = myauth) do event, phrase
     ## @show comment
 
     results = include(Pkg.dir(pkg_name, "benchmarks", "runbenchmarks.jl"))
-    if isa(results, BenchmarkTools.BenchmarkGroup)
-        if haskey(results, "calculus")
-            final_results = "$(results["calculus"]) \n $(results["calculus"]["test"])\n"
-        else
-            final_results = Base.show(results)
-        end
-    else
-        final_results = results
-    end
-    @show final_results
 
     if event.payload["object_attributes"]["noteable_type"] == "Issue"
-        comment_params = Dict("body" => "<H2>Your benchmark results are available ! </H2> <br/> <code> $final_results <code>")
+        comment_params = Dict("body" => "<H2>Your benchmark results are available ! </H2> <br/> <code> $results <code>")
         comment_kind = :issue
         reply_to = event.payload["object_attributes"]["noteable_id"]
         #=
@@ -48,11 +38,11 @@ listener = GitLab.CommentListener(trigger; auth = myauth) do event, phrase
         reply_to = event.payload["issue"]["iid"]
         =#
     elseif event.payload["object_attributes"]["noteable_type"] == "Commit"
-        comment_params = Dict("note" => "<H2>Your benchmark results are available ! </H2> <br/> <code> $final_results <code>")
+        comment_params = Dict("note" => "<H2>Your benchmark results are available ! </H2> <br/> <code> $results <code>")
         comment_kind = :commit
         reply_to = get(comment.commit_id)
     elseif event.payload["object_attributes"]["noteable_type"] == "MergeRequest"
-        comment_params = Dict("body" => "<H2>Your benchmark results are available ! </H2> <br/> <code> $final_results <code>")
+        comment_params = Dict("body" => "<H2>Your benchmark results are available ! </H2> <br/> <code> $results <code>")
         comment_kind = :review
         reply_to = event.payload["object_attributes"]["noteable_id"]
         # load required query params for review comment creation
