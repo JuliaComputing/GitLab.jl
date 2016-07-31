@@ -42,7 +42,6 @@ type Repo <: GitLabType
     public_builds::Nullable{Bool}
     ## TODO permissions::Nullable{Permissions}
     ## \"permissions\":{\"project_access\":{\"access_level\":40,\"notification_level\":3},\"group_access\":null}
-
 end
 
 Repo(data::Dict) = json2gitlab(Repo, data)
@@ -58,6 +57,11 @@ namefield(repo::Repo) = repo.name
 
 # repos #
 #-------#
+
+function repo_by_name(repo_name; options...)
+    result = gh_get_json("/api/v3/projects/search/$(repo_name)"; options...)
+    return Repo(result[1])
+end
 
 function repo(repo_obj; options...)
     ## result = gh_get_json("/repos/$(name(repo_obj))"; options...)
