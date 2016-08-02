@@ -11,7 +11,6 @@ repo_data["project_id"] = 1
 myrepo = GitLab.Repo(repo_data)
 @show myrepo
 
-#= REMOVE 
 simple_repo = GitLab.Repo("SimpleRepo")
 @show simple_repo
 
@@ -21,8 +20,8 @@ repo = GitLab.repo(myrepo; params=options)
 @show repo
 
 try ## remove this later 
-forks = GitLab.forks(myrepo; params=options)
-@show forks
+    forks = GitLab.forks(myrepo; params=options)
+    @show forks
 end
 
 repo_data = Dict{AbstractString, Any}()
@@ -32,11 +31,13 @@ yourrepo = GitLab.Repo(repo_data)
 yourrepo = GitLab.repo(yourrepo; params=options)
 @show yourrepo
 
-forked_repo = GitLab.create_fork(yourrepo; headers=options)
-@show forked_repo
+try ## This may fail if the fork already exists
+    forked_repo = GitLab.create_fork(yourrepo; headers=options)
+    @show forked_repo
 
-repo = GitLab.delete_fork(forked_repo; headers=options)
-@show repo
+    repo = GitLab.delete_fork(forked_repo; headers=options)
+    @show repo
+end
 
 contributors = GitLab.contributors(myrepo, params=options)
 @show contributors
@@ -49,7 +50,6 @@ collaborator = GitLab.iscollaborator(myrepo, "mdpradeep", params=options)
 
 non_collaborator = GitLab.iscollaborator(myrepo, "XXXXX", params=options)
 @show non_collaborator
-=#
 
 user_data = Dict{AbstractString, Any}()
 user_data["user_id"] = 3
@@ -73,7 +73,7 @@ try
         println("Failed to added collaborator $(UTF8String(result.data))")
     end
 catch e
-    println("Failed to added collaborator $(e)")
+    println("Failed (expected) to added collaborator $(e)")
     ## This is the expected behavior in this case
 end
 
@@ -83,8 +83,8 @@ result = GitLab.remove_collaborator(myrepo, "3", headers=options, params=user_da
 try 
     result = GitLab.remove_collaborator(myrepo, "999", headers=options, params=user_data)
     @show result
-catch 3
-    println("Failed to remove collaborator $(e)")
+catch e
+    println("Failed (expected) to remove collaborator $(e)")
     ## This is the expected behavior in this case
 end
 
