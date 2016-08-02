@@ -61,7 +61,7 @@ function delete_file(repo, path; options...)
 end
 
 function readme(repo; options...)
-    result = gh_get_json("/api/v3/projects/$(repo.project_id.value)/readme"; options...)
+    result = gh_get_json("/api/v3/projects/$(get(repo.project_id))/readme"; options...)
     return Content(result)
 end
 
@@ -77,10 +77,10 @@ end
 # Content Utility Methods #
 ###########################
 
-## content_uri(repo, path) = "/api/v3/projects/$(repo.project_id.value)/contents/$(name(path))"
-## content_uri(repo, path) = "/api/v3/projects/$(repo.project_id.value)/files"
-content_uri(repo, path, ref) = "/api/v3/projects/$(repo.project_id.value)/repository/files?file_path=$(name(path))&ref=$(name(ref))"
-content_uri(repo, path) = "/api/v3/projects/$(repo.project_id.value)/repository/files?file_path=$(name(path))"
+## content_uri(repo, path) = "/api/v3/projects/$(get(repo.project_id))/contents/$(name(path))"
+## content_uri(repo, path) = "/api/v3/projects/$(get(repo.project_id))/files"
+content_uri(repo, path, ref) = "/api/v3/projects/$(get(repo.project_id))/repository/files?file_path=$(name(path))&ref=$(name(ref))"
+content_uri(repo, path) = "/api/v3/projects/$(get(repo.project_id))/repository/files?file_path=$(name(path))"
 
 function build_content_response(json::Dict)
 @show json

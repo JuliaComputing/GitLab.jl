@@ -36,11 +36,11 @@ listener = GitLab.CommentListener(trigger; auth = myauth) do event, phrase
 
     ## Send the results to the BenchmarkResults repository and get the link for the same.
     issue = GitLab.create_issue(benchmark_results_repo; headers=options, params = Dict("title" => "Benchmark Results"))
-    benchmark_reply_to = issue.id.value
+    benchmark_reply_to = get(issue.id)
 
     str_buf = IOBuffer(true, true)
-    print(str_buf, benchmark_results_repo.web_url.value)
-    issue_url = UTF8String(str_buf.data) * "/issues/$(issue.id.value)"
+    print(str_buf, get(benchmark_results_repo.web_url))
+    issue_url = UTF8String(str_buf.data) * "/issues/$(get(issue.id))"
 
     if event.payload["object_attributes"]["noteable_type"] == "Issue"
         benchmark_comment_params = Dict("body" => "<H2>Your benchmark results are available ! </H2> <code>$results<code>")

@@ -42,26 +42,26 @@ namefield(issue::Issue) = issue.id
 ###############
 
 function issue(repo::Repo, issue_id::Int; options...)
-    result = gh_get_json("/api/v3/projects/$(repo.project_id.value)/issues/$(issue_id)"; options...)
+    result = gh_get_json("/api/v3/projects/$(get(repo.project_id))/issues/$(issue_id)"; options...)
     return Issue(result)
 end
 
 function issues(repo::Repo; options...)
-    results, page_data = gh_get_paged_json("/api/v3/projects/$(repo.project_id.value)/issues"; options...)
+    results, page_data = gh_get_paged_json("/api/v3/projects/$(get(repo.project_id))/issues"; options...)
     return map(Issue, results), page_data
 end
 
 function create_issue(repo::Repo; options...)
-    result = gh_post_json("/api/v3/projects/$(repo.project_id.value)/issues"; options...)
+    result = gh_post_json("/api/v3/projects/$(get(repo.project_id))/issues"; options...)
     return Issue(result)
 end
 
 function edit_issue(repo::Repo, issue_id::Int; options...)
-    result = gh_put_json("/api/v3/projects/$(repo.project_id.value)/issues/$(issue_id)"; options...)
+    result = gh_put_json("/api/v3/projects/$(get(repo.project_id))/issues/$(issue_id)"; options...)
     return Issue(result)
 end
 
 function delete_issue(repo::Repo, issue_id::Int; options...)
-    result = gh_delete_json("/api/v3/projects/$(repo.project_id.value)/issues/$(issue_id)"; options...)
+    result = gh_delete_json("/api/v3/projects/$(get(repo.project_id))/issues/$(issue_id)"; options...)
     return Issue(result)
 end

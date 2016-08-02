@@ -2,7 +2,7 @@
 # WebhookEvent Type #
 #####################
 
-type WebhookEvent
+type WebhookEvent 
     kind::GitLabString
     payload::Dict
     repository::Repo
@@ -50,7 +50,6 @@ has_sig_header(request::HttpCommon.Request) = haskey(request.headers, "X-Gitlab-
 sig_header(request::HttpCommon.Request) = request.headers["X-Gitlab-Token"]
 
 function has_valid_secret(request::HttpCommon.Request, secret)
-    @show request.headers
     if has_sig_header(request)
         secret_sha = "sha1="*bytes2hex(MbedTLS.digest(MbedTLS.MD_SHA1, request.data, secret))
         @show sig_header(request), secret_sha
@@ -110,7 +109,14 @@ function handle_event_request(request, handle;
                               auth::Authorization = AnonymousAuth(),
                               secret = nothing, events = nothing,
                               repos = nothing, forwards = nothing)
-    @show secret, request, events, auth, handle
+    @show secret, events, auth, handle
+#=
+    @show request.method
+    @show request.resource
+    @show request.headers
+    @show UTF8String(request.data)
+    @show request.uri
+=#
     if !(isa(secret, Void)) && !(has_valid_secret(request, secret))
         ## MDP TODO
         println("FIX ME !!!!!!!!!!!!!!!!!!!!!!!!!!!!!")

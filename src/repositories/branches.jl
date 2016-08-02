@@ -29,13 +29,13 @@ namefield(branch::Branch) = branch.name
 
 function branches(repo; options...)
     ## MDP results, page_data = gh_get_paged_json("/repos/$(name(repo))/branches"; options...)
-    results, page_data = gh_get_paged_json("/api/v3/projects/$(repo.project_id.value)/repository/branches"; options...)
+    results, page_data = gh_get_paged_json("/api/v3/projects/$(get(repo.project_id))/repository/branches"; options...)
 @show results
     return map(Branch, results), page_data
 end
 
 function branch(repo, branch_obj; options...)
     ## result = gh_get_json("/repos/$(name(repo))/branches/$(name(branch_obj))"; options...)
-    result = gh_get_json("/api/v3/projects/$(repo.project_id.value)/repository/branches/$(name(branch_obj))"; options...)
+    result = gh_get_json("/api/v3/projects/$(get(repo.project_id))/repository/branches/$(name(branch_obj))"; options...)
     return Branch(result)
 end

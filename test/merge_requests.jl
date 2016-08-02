@@ -14,7 +14,7 @@ merge_requests, page_data = GitLab.pull_requests(myrepo; params=options)
 @show merge_requests
 
 @show merge_requests[1]
-merge_request = GitLab.pull_request(myrepo, merge_requests[1].id.value; params=options)
+merge_request = GitLab.pull_request(myrepo, get(merge_requests[1].id); params=options)
 @show merge_request
 
 println("Done !!!")

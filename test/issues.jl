@@ -36,7 +36,7 @@ if haskey(options, "labels")
     delete!(options, "labels")
 end
 
-issue = GitLab.issue(myrepo, issue[1].id.value; params=options)
+issue = GitLab.issue(myrepo, get(issue[1].id); params=options)
 @show issue
 
 issue_data = Dict{AbstractString, Any}()
@@ -47,13 +47,13 @@ issue = GitLab.create_issue(myrepo; params=issue_data, headers=options)
 
 issue_data["title"] = "This is a test - edit"
 issue_data["description"] = "This is some description - edit"
-issue = GitLab.edit_issue(myrepo, issue.id.value; params=issue_data, headers=options)
+issue = GitLab.edit_issue(myrepo, get(issue.id); params=issue_data, headers=options)
 @show issue
 
 println("Sleeping before deleting the issue !!")
 sleep(10)
 
-del_issue = GitLab.delete_issue(myrepo, issue.id.value; params=issue_data, headers=options)
+del_issue = GitLab.delete_issue(myrepo, get(issue.id); params=issue_data, headers=options)
 @show del_issue
 
 

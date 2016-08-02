@@ -23,7 +23,7 @@ status_data["state"] = "invalid"
 try
     status = GitLab.create_status(myrepo, "5c35ae1de7f6d6bfadf0186e165f7af6537e7da8"; headers=options, params=status_data)
 catch e
-    println("Failed to update status : $(e)")
+    println("Failed (Expected)  to update status : $(e)")
 end
 println("Done !!!")
 

@@ -65,7 +65,7 @@ end
 
 function repo(repo_obj; options...)
     ## result = gh_get_json("/repos/$(name(repo_obj))"; options...)
-    result = gh_get_json("/api/v3/projects/$(repo_obj.project_id.value)"; options...)
+    result = gh_get_json("/api/v3/projects/$(get(repo_obj.project_id))"; options...)
     return Repo(result)
 end
 
@@ -76,19 +76,19 @@ function forks(repo; options...)
     error("Not implemented yet !!")
 ## TODO
     ## results, page_data = gh_get_paged_json("/repos/$(name(repo))/forks"; options...)
-    results, page_data = gh_get_paged_json("/api/v3/projects/$(repo.project_id.value)/forks"; options...)
+    results, page_data = gh_get_paged_json("/api/v3/projects/$(get(repo.project_id))/forks"; options...)
     return map(Repo, results), page_data
 end
 
 function create_fork(repo; options...)
     ## result = gh_post_json("/repos/$(name(repo))/forks"; options...)
-    result = gh_post_json("/api/v3/projects/fork/$(repo.id.value)"; options...)
+    result = gh_post_json("/api/v3/projects/fork/$(get(repo.id))"; options...)
     return Repo(result)
 end
 
 function delete_fork(repo; options...)
     ## /projects/:id/fork
-    result = gh_delete_json("/api/v3/projects/$(repo.id.value)/fork"; options...)
+    result = gh_delete_json("/api/v3/projects/$(get(repo.id))/fork"; options...)
     return Repo(result)
 end
 
@@ -97,32 +97,32 @@ end
 
 function contributors(repo; options...)
     ## results, page_data = gh_get_paged_json("/repos/$(name(repo))/contributors"; options...)
-    results, page_data = gh_get_paged_json("/api/v3/projects/$(repo.project_id.value)/repository/contributors"; options...)
+    results, page_data = gh_get_paged_json("/api/v3/projects/$(get(repo.project_id))/repository/contributors"; options...)
     results = [Dict("contributor" => Owner(i), "contributions" => i["commits"]) for i in results]
     return results, page_data
 end
 
 function collaborators(repo; options...)
     ## MDP results, page_data = gh_get_json("/repos/$(name(repo))/collaborators"; options...)
-    ## MDP results, page_data = gh_get_json("/api/v3/projects/$(repo.project_id.value)/repository/contributors"; options...)
-    ## results, page_data = gh_get_paged_json("/api/v3/projects/$(repo.project_id.value)/members"; options...)
-    results = gh_get_json("/api/v3/projects/$(repo.project_id.value)/members"; options...)
+    ## MDP results, page_data = gh_get_json("/api/v3/projects/$(get(repo.project_id))/repository/contributors"; options...)
+    ## results, page_data = gh_get_paged_json("/api/v3/projects/$(get(repo.project_id))/members"; options...)
+    results = gh_get_json("/api/v3/projects/$(get(repo.project_id))/members"; options...)
     return map(Owner, results)
 end
 
 function iscollaborator(repo, user; options...)
     collaborators = GitLab.collaborators(repo; options...)
     for c in collaborators
-        if c.username.value == user
+        if get(c.username) == user
             return true
         end
     end
 
     #= The following API works only with ID !
     ## MDP path = "/repos/$(name(repo))/collaborators/$(name(user))"
-    ## path = "/api/v3/projects/$(repo.project_id.value)/repository/contributors/$(name(user))"
+    ## path = "/api/v3/projects/$(get(repo.project_id))/repository/contributors/$(name(user))"
 
-    path = "/api/v3/projects/$(repo.project_id.value)/members/$ID"
+    path = "/api/v3/projects/$(get(repo.project_id))/members/$ID"
     r = gh_get(path; handle_error = false, options...)
     @show r
 
@@ -135,16 +135,16 @@ end
 
 function add_collaborator(repo, user; options...)
     ## MDP path = "/repos/$(name(repo))/collaborators/$(name(user))"
-    ## path = "/api/v3/projects/$(repo.project_id.value)/members/$(user)"
+    ## path = "/api/v3/projects/$(get(repo.project_id))/members/$(user)"
     ## return gh_put(path; options...)
-    path = "/api/v3/projects/$(repo.project_id.value)/members"
+    path = "/api/v3/projects/$(get(repo.project_id))/members"
     return gh_post(path; options...)
 end
 
 function remove_collaborator(repo, user; options...)
     ## MDP path = "/repos/$(name(repo))/collaborators/$(name(user))"
-    ## path = "/api/v3/projects/$(repo.project_id.value)/repository/contributors/$(name(user))"
-    path = "/api/v3/projects/$(repo.project_id.value)/members/$(user)"
+    ## path = "/api/v3/projects/$(get(repo.project_id))/repository/contributors/$(name(user))"
+    path = "/api/v3/projects/$(get(repo.project_id))/members/$(user)"
     return gh_delete(path; options...)
 end
 
@@ -154,7 +154,7 @@ end
 ## TODO Check how to enable sidekiq stats !
 function stats(repo, stat, attempts = 3; options...)
     ## MDP path = "/repos/$(name(repo))/stats/$(name(stat))"
-    ## path = "/api/v3/projects/$(repo.project_id.value)/repository/stats/$(name(stat))"
+    ## path = "/api/v3/projects/$(get(repo.project_id))/repository/stats/$(name(stat))"
     path = "/api/v3/projects/sidekiq/$(name(stat))"
     local r
     for a in 1:attempts

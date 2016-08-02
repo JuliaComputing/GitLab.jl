@@ -5,7 +5,7 @@
 #= Seems like there is no equivalent of this method to get the watchers of repos
 function stargazers(repo; options...)
     ## results, page_data = gh_get_paged_json("/repos/$(name(repo))/stargazers"; options...)
-    results, page_data = gh_get_paged_json("/api/v3/projects/$(repo.project_id.value)/star"; options...)
+    results, page_data = gh_get_paged_json("/api/v3/projects/$(get(repo.project_id))/star"; options...)
     return map(Owner, results), page_data
 end
 =#
@@ -17,10 +17,10 @@ function starred(user; options...)
 end
 
 ## star(repo; options...) = gh_put("/user/starred/$(name(repo))"; options...)
-star(repo; options...) = gh_post("/api/v3/projects/$(repo.project_id.value)/star"; options...)
+star(repo; options...) = gh_post("/api/v3/projects/$(get(repo.project_id))/star"; options...)
 
 ## unstar(repo; options...) = gh_delete("/user/starred/$(name(repo))"; options...)
-unstar(repo; options...) = gh_delete("/api/v3/projects/$(repo.project_id.value)/star"; options...)
+unstar(repo; options...) = gh_delete("/api/v3/projects/$(get(repo.project_id))/star"; options...)
 
 ############
 # Watching #
@@ -29,7 +29,7 @@ unstar(repo; options...) = gh_delete("/api/v3/projects/$(repo.project_id.value)/
 #= Seems like there is no equivalent of these methods
 function watchers(repo; options...)
     ## results, page_data = gh_get_paged_json("/repos/$(name(repo))/subscribers"; options...)
-    results, page_data = gh_get_paged_json("/api/v3/projects/$(repo.project_id.value)/subscribers"; options...)
+    results, page_data = gh_get_paged_json("/api/v3/projects/$(get(repo.project_id))/subscribers"; options...)
     return map(Owner, results), page_data
 end
 
@@ -39,8 +39,8 @@ function watched(owner; options...)
 end
 
 ## watch(repo; options...) = gh_put("/repos/$(name(repo))/subscription"; options...)
-watch(repo; options...) = gh_put("/api/v3/projects/$(repo.project_id.value)/subscription"; options...)
+watch(repo; options...) = gh_put("/api/v3/projects/$(get(repo.project_id))/subscription"; options...)
 
 ## unwatch(repo; options...) = gh_delete("/repos/$(name(repo))/subscription"; options...)
-unwatch(repo; options...) = gh_delete("/api/v3/projects/$(repo.project_id.value)/subscription"; options...)
+unwatch(repo; options...) = gh_delete("/api/v3/projects/$(get(repo.project_id))/subscription"; options...)
 =#
