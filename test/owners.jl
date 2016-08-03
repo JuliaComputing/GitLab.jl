@@ -28,7 +28,7 @@ name = GitLab.namefield(own)
 
 push!(options, "username", "mdpradeep")
 
-new_owner = GitLab.owner("", false; params = options)
+new_owner = GitLab.owner("mdpradeep", false; headers = options)
 @show new_owner
 
 users, page_data = GitLab.users(; params = options)

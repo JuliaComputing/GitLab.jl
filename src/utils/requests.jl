@@ -48,7 +48,8 @@ gh_patch_json(endpoint = ""; options...) = Requests.json(gh_patch(endpoint; opti
 # Rate Limiting #
 #################
 
-rate_limit(; options...) = gh_get_json("/rate_limit"; options...)
+## There are no rate_limit APIs in GitLab
+## rate_limit(; options...) = gh_get_json("/rate_limit"; options...)
 
 ##############
 # Pagination #
