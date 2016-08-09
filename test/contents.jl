@@ -1,22 +1,14 @@
 import GitLab
+using Base.Test
 myauth = GitLab.authenticate(ENV["GITLAB_AUTH"]) # don't hardcode your access tokens!
 println("Authentication successful")
 options = Dict("private_token" => myauth.token)
-## @show options
 
-repo_data = Dict{AbstractString, Any}()
-repo_data["name"] = "TestProject1"
-repo_data["project_id"] = 1
-
-## myrepo = GitLab.Repo("TestProject1")
-myrepo = GitLab.Repo(repo_data)
-
-@show myrepo
-
+myrepo = GitLab.repo_by_name("TestProject1"; headers=options)
 
 file = GitLab.file(myrepo, "src/file1", "master"; headers=options)
-@show file
+@test get(file.file_path) == "src/file1"
 
-println("Done !!!")
+println("Content Tests Done !!!")
 
 

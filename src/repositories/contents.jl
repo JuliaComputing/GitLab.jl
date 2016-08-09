@@ -40,10 +40,12 @@ function file(repo, path, ref; options...)
     return Content(result)
 end
 
+#= TODO No equivalent API
 function directory(repo, path; options...)
     results, page_data = gh_get_paged_json(content_uri(repo, path); options...)
     return map(Content, results), page_data
 end
+=#
 
 function create_file(repo, path; options...)
     result = gh_put_json(content_uri(repo, path); options...)
@@ -61,7 +63,8 @@ function delete_file(repo, path; options...)
 end
 
 function readme(repo; options...)
-    result = gh_get_json("/api/v3/projects/$(get(repo.project_id))/readme"; options...)
+    ## result = gh_get_json("/api/v3/projects/$(get(repo.id))/readme"; options...)
+    result = gh_get_json(content_uri(repo, "README.md"); options...)
     return Content(result)
 end
 
@@ -77,13 +80,12 @@ end
 # Content Utility Methods #
 ###########################
 
-## content_uri(repo, path) = "/api/v3/projects/$(get(repo.project_id))/contents/$(name(path))"
-## content_uri(repo, path) = "/api/v3/projects/$(get(repo.project_id))/files"
-content_uri(repo, path, ref) = "/api/v3/projects/$(get(repo.project_id))/repository/files?file_path=$(name(path))&ref=$(name(ref))"
-content_uri(repo, path) = "/api/v3/projects/$(get(repo.project_id))/repository/files?file_path=$(name(path))"
+## content_uri(repo, path) = "/api/v3/projects/$(get(repo.id))/contents/$(name(path))"
+## content_uri(repo, path) = "/api/v3/projects/$(get(repo.id))/files"
+content_uri(repo, path, ref) = "/api/v3/projects/$(get(repo.id))/repository/files?file_path=$(name(path))&ref=$(name(ref))"
+content_uri(repo, path) = "/api/v3/projects/$(get(repo.id))/repository/files?file_path=$(name(path))&ref=master"
 
 function build_content_response(json::Dict)
-@show json
     results = Dict()
     haskey(json, "commit") && setindex!(results, Commit(json["commit"]), "commit")
     haskey(json, "content") && setindex!(results, Content(json["content"]), "content")

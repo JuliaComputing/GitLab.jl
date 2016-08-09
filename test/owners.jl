@@ -1,41 +1,34 @@
 import GitLab
+using Base.Test
+
 myauth = GitLab.authenticate(ENV["GITLAB_AUTH"]) # don't hardcode your access tokens!
 println("Authentication successful")
 options = Dict("private_token" => myauth.token)
-## @show options
 
-repo_data = Dict{AbstractString, Any}()
-repo_data["name"] = "TestProject1"
-repo_data["project_id"] = 1
-
-## myrepo = GitLab.Repo("TestProject1")
-myrepo = GitLab.Repo(repo_data)
-
-@show myrepo
-
-
+myrepo = GitLab.repo_by_name("TestProject1"; headers=options)
 
 ## Create new owner:
-
 user_info = Dict{AbstractString, Any}()
 user_info["name"] = "Test User"
 user_info["username"] = "testuser"
 own = GitLab.Owner(user_info)
-@show own
+## @show own
 
 name = GitLab.namefield(own)
-@show name
+@test get(name) == user_info["username"] 
 
-push!(options, "username", "mdpradeep")
+setindex!(options, "mdpradeep", "username")
 
 new_owner = GitLab.owner("mdpradeep", false; headers = options)
-@show new_owner
+## @show new_owner
 
 users, page_data = GitLab.users(; params = options)
-@show users, page_data
+## @show users, page_data
+@test GitLab.name(first(users)) == "mdpradeep"
 
 orgs, page_data = GitLab.orgs(own; params=options)
-@show orgs, page_data
+@test GitLab.name(last(orgs)) == "TestProject1"
+## @show orgs, page_data
 
 #=
 followers, page_data  = GitLab.followers(own; params=options)
@@ -46,6 +39,7 @@ following, page_data  = GitLab.following(own; params=options)
 =#
 
 repos, page_data  = GitLab.repos(own; params=options)
-@show repos, page_data
+@test GitLab.name(last(repos)) == "TestProject1"
+## @show repos, page_data
 
-println("Done !!!")
+println("Owner Tests Done !!!")

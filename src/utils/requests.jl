@@ -17,16 +17,13 @@ function gitlab_request(request_method, endpoint;
     authenticate_headers!(headers, auth)
     params = gitlab2json(params)
     api_endpoint = api_uri(endpoint)
-@show api_endpoint
+    @show api_endpoint
     if request_method == Requests.get
         r = request_method(api_endpoint; headers = headers, query = params)
     else
-        ## headers["private_token"] = "$(auth.token)" ## MDP
         r = request_method(api_endpoint; headers = headers, json = params)
     end
-    @show r
-    ## MDP @show r.headers
-    @show UTF8String(r.data)
+    ## @show UTF8String(r.data)
     handle_error && handle_response_error(r)
     return r
 end

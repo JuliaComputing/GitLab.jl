@@ -2,7 +2,6 @@ import GitLab
 myauth = GitLab.authenticate(ENV["GITLAB_AUTH"]) # don't hardcode your access tokens!
 println("Authentication successful")
 options = Dict("private_token" => myauth.token)
-## @show options
 
 
 
@@ -70,5 +69,4 @@ end
 
 # Start the listener on localhost at port 8000
 ## GitLab.run(listener, host=IPv4(127,0,0,1), port=8000)
-## GitLab.run(listener, host=IPv4(124,40,246,76), port=8000)
 GitLab.run(listener, host=IPv4(0,0,0,0), port=8000)

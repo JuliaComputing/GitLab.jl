@@ -4,7 +4,6 @@ using BenchmarkTools
 myauth = GitLab.authenticate(ENV["GITLAB_AUTH"]) # don't hardcode your access tokens!
 println("Authentication successful")
 options = Dict("private_token" => myauth.token)
-## @show options
 
 # EventListener settings
 ## mysecret = ENV["MY_SECRET"]
@@ -12,7 +11,6 @@ options = Dict("private_token" => myauth.token)
 ## Get the BenchmarkResults repo!
 
 benchmark_results_repo = GitLab.repo_by_name("BenchmarkResults"; headers=options)
-benchmark_results_repo.project_id = benchmark_results_repo.id
 
 # CommentListener settings
 trigger = r"`runbenchmarks\(.*?\)`"
@@ -20,7 +18,6 @@ trigger = r"`runbenchmarks\(.*?\)`"
 # We can use Julia's `do` notation to set up the listener's handler function.
 # Note that, in our example case
 listener = GitLab.CommentListener(trigger; auth = myauth) do event, phrase
-@show phrase
     ## pkg_names = matchall(r"\".*?\"", phrase.match)
     ## pkg_name = pkg_names[1]
     ## Take the current package !!
@@ -42,18 +39,16 @@ listener = GitLab.CommentListener(trigger; auth = myauth) do event, phrase
     print(str_buf, get(benchmark_results_repo.web_url))
     issue_url = UTF8String(str_buf.data) * "/issues/$(get(issue.id))"
 
+    ## @show event.payload["object_attributes"]
     if event.payload["object_attributes"]["noteable_type"] == "Issue"
-        benchmark_comment_params = Dict("body" => "<H2>Your benchmark results are available ! </H2> <code>$results<code>")
         comment_params = Dict("body" => "<H2>Your benchmark results are available here - $(issue_url) </H2>")
         comment_kind = :issue
         reply_to = event.payload["object_attributes"]["noteable_id"]
     elseif event.payload["object_attributes"]["noteable_type"] == "Commit"
-        benchmark_comment_params = Dict("note" => "<H2>Your benchmark results are available ! </H2> <code>$results<code>")
         comment_params = Dict("note" => "<H2>Your benchmark results are available here - $(issue_url) </H2>")
         comment_kind = :commit
         reply_to = get(comment.commit_id)
     elseif event.payload["object_attributes"]["noteable_type"] == "MergeRequest"
-        benchmark_comment_params = Dict("body" => "<H2>Your benchmark results are available ! </H2> <code>$results<code>")
         comment_params = Dict("body" => "<H2>Your benchmark results are available here - $(issue_url) </H2>")
         comment_kind = :review
         reply_to = event.payload["object_attributes"]["noteable_id"]
@@ -67,7 +62,8 @@ listener = GitLab.CommentListener(trigger; auth = myauth) do event, phrase
 
     ## @show benchmark_comment_params
     ## Update the issue with results
-    GitLab.create_comment(benchmark_results_repo, benchmark_reply_to, comment_kind; headers = options, params = benchmark_comment_params)
+    benchmark_comment_params = Dict("body" => "<H2>Your benchmark results are available ! </H2> <code>$results<code>")
+    GitLab.create_comment(benchmark_results_repo, benchmark_reply_to, :issue; headers = options, params = benchmark_comment_params)
     
 
     # send the comment creation request to GitLab

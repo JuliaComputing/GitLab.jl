@@ -63,9 +63,9 @@ function repo_by_name(repo_name; options...)
     return Repo(result[1])
 end
 
-function repo(repo_obj; options...)
+function repo(id; options...)
     ## result = gh_get_json("/repos/$(name(repo_obj))"; options...)
-    result = gh_get_json("/api/v3/projects/$(get(repo_obj.project_id))"; options...)
+    result = gh_get_json("/api/v3/projects/$(id)"; options...)
     return Repo(result)
 end
 
@@ -74,9 +74,9 @@ end
 
 function forks(repo; options...)
     error("Not implemented yet !!")
-## TODO
+    ## TODO
     ## results, page_data = gh_get_paged_json("/repos/$(name(repo))/forks"; options...)
-    results, page_data = gh_get_paged_json("/api/v3/projects/$(get(repo.project_id))/forks"; options...)
+    results, page_data = gh_get_paged_json("/api/v3/projects/$(get(repo.id))/forks"; options...)
     return map(Repo, results), page_data
 end
 
@@ -97,16 +97,16 @@ end
 
 function contributors(repo; options...)
     ## results, page_data = gh_get_paged_json("/repos/$(name(repo))/contributors"; options...)
-    results, page_data = gh_get_paged_json("/api/v3/projects/$(get(repo.project_id))/repository/contributors"; options...)
+    results, page_data = gh_get_paged_json("/api/v3/projects/$(get(repo.id))/repository/contributors"; options...)
     results = [Dict("contributor" => Owner(i), "contributions" => i["commits"]) for i in results]
     return results, page_data
 end
 
 function collaborators(repo; options...)
     ## MDP results, page_data = gh_get_json("/repos/$(name(repo))/collaborators"; options...)
-    ## MDP results, page_data = gh_get_json("/api/v3/projects/$(get(repo.project_id))/repository/contributors"; options...)
-    ## results, page_data = gh_get_paged_json("/api/v3/projects/$(get(repo.project_id))/members"; options...)
-    results = gh_get_json("/api/v3/projects/$(get(repo.project_id))/members"; options...)
+    ## MDP results, page_data = gh_get_json("/api/v3/projects/$(get(repo.id))/repository/contributors"; options...)
+    ## results, page_data = gh_get_paged_json("/api/v3/projects/$(get(repo.id))/members"; options...)
+    results = gh_get_json("/api/v3/projects/$(get(repo.id))/members"; options...)
     return map(Owner, results)
 end
 
@@ -118,33 +118,21 @@ function iscollaborator(repo, user; options...)
         end
     end
 
-    #= The following API works only with ID !
-    ## MDP path = "/repos/$(name(repo))/collaborators/$(name(user))"
-    ## path = "/api/v3/projects/$(get(repo.project_id))/repository/contributors/$(name(user))"
-
-    path = "/api/v3/projects/$(get(repo.project_id))/members/$ID"
-    r = gh_get(path; handle_error = false, options...)
-    @show r
-
-    r.status <= 204 && return true
-    r.status == 404 && return false
-    handle_response_error(r)  # 404 is not an error in this case
-    =#
     return false
 end
 
 function add_collaborator(repo, user; options...)
     ## MDP path = "/repos/$(name(repo))/collaborators/$(name(user))"
-    ## path = "/api/v3/projects/$(get(repo.project_id))/members/$(user)"
+    ## path = "/api/v3/projects/$(get(repo.id))/members/$(user)"
     ## return gh_put(path; options...)
-    path = "/api/v3/projects/$(get(repo.project_id))/members"
+    path = "/api/v3/projects/$(get(repo.id))/members"
     return gh_post(path; options...)
 end
 
 function remove_collaborator(repo, user; options...)
     ## MDP path = "/repos/$(name(repo))/collaborators/$(name(user))"
-    ## path = "/api/v3/projects/$(get(repo.project_id))/repository/contributors/$(name(user))"
-    path = "/api/v3/projects/$(get(repo.project_id))/members/$(user)"
+    ## path = "/api/v3/projects/$(get(repo.id))/repository/contributors/$(name(user))"
+    path = "/api/v3/projects/$(get(repo.id))/members/$(user)"
     return gh_delete(path; options...)
 end
 
@@ -154,7 +142,7 @@ end
 ## TODO Check how to enable sidekiq stats !
 function stats(repo, stat, attempts = 3; options...)
     ## MDP path = "/repos/$(name(repo))/stats/$(name(stat))"
-    ## path = "/api/v3/projects/$(get(repo.project_id))/repository/stats/$(name(stat))"
+    ## path = "/api/v3/projects/$(get(repo.id))/repository/stats/$(name(stat))"
     path = "/api/v3/projects/sidekiq/$(name(stat))"
     local r
     for a in 1:attempts

@@ -1,116 +1,120 @@
 using GitLab, GitLab.name
 using Base.Test
 
-# The below tests are network-dependent, and actually make calls to GitLab's
-# API. They're all read-only, meaning none of them require authentication.
+# The below tests are network-dependent, and actually make calls to GitLab's API
 
-testuser = Owner("julia-gitlab-test-bot")
-julweb = Owner("JuliaComputing", true)
-ghjl = Repo("JuliaComputing/GitLab.jl")
-testcommit = Commit("3a90e7d64d6184b877f800570155c502b1119c15")
+## testuser = Owner("julia-gitlab-test-bot")
+testuser = Owner("mdpradeep")
+julweb = Owner("TestProject1", true)
+testcommit = Commit("93add52417601de893c3db3b30276c576933bf33")
 
 hasghobj(obj, items) = any(x -> name(x) == name(obj), items)
 
-# This token has public, read-only access, and is required so that our
-# tests don't get rate-limited. The only way a malicious party could do harm
-# with this token is if they used it to abuse the rate limit associated with
-# the token (not too big of a deal). The token is hard-coded in an obsfucated
-# manner in an attempt to thwart token-stealing crawlers.
-auth = authenticate(string(circshift(["bcc", "3fc", "03a", "33e",
-                                      "c09", "363", "5f1", "bd3",
-                                      "fc6", "77b", '5', "9cf",
-                                      "868", "033"], 3)...))
+auth = GitLab.authenticate(ENV["GITLAB_AUTH"]) # don't hardcode access tokens!
+println("Authentication successful")
+options = Dict("private_token" => auth.token)
+ghjl = GitLab.repo_by_name("Calculus"; headers=options)
 
-@test rate_limit(; auth = auth)["rate"]["limit"] == 5000
+## @test rate_limit(; headers = options)["rate"]["limit"] == 5000
 
 ##########
 # Owners #
 ##########
 
 # test GitLab.owner
-@test name(owner(testuser; auth = auth)) == name(testuser)
-@test name(owner(julweb; auth = auth)) == name(julweb)
+@test name(owner(testuser; headers = options)) == name(testuser)
+## TODO CHECK @test name(owner(julweb; headers = options)) == name(julweb)
 
 # test GitLab.orgs
-@test hasghobj("JuliaComputing", first(orgs("jrevels"; auth = auth)))
+## TODO CHECK @test hasghobj("TestProject1", orgs("TestProject1"; headers = options))
 
+#= No equivalent APIs
 # test GitLab.followers, GitLab.following
-@test hasghobj("jrevels", first(followers(testuser; auth = auth)))
-@test hasghobj("jrevels", first(following(testuser; auth = auth)))
+@test hasghobj("mdpradeep", first(followers(testuser; headers = options)))
+@test hasghobj("mdpradeep", first(following(testuser; headers = options)))
+=#
 
 # test GitLab.repos
-@test hasghobj(ghjl, first(repos(julweb; auth = auth)))
+@test hasghobj(ghjl, first(repos(julweb; headers = options)))
 
 ################
 # Repositories #
 ################
 
 # test GitLab.repo
-@test name(repo(ghjl; auth = auth)) == name(ghjl)
+@test name(repo(get(ghjl.id); headers = options)) == name(ghjl)
 
+#= No equivalent API
 # test GitLab.forks
-@test length(first(forks(ghjl; auth = auth))) > 0
+@test length(first(forks(ghjl; headers = options))) > 0
+=#
 
 # test GitLab.contributors
-@test hasghobj("jrevels", map(x->x["contributor"], first(contributors(ghjl; auth = auth))))
+@test hasghobj("Pradeep Mudlapur", map(x->x["contributor"], first(contributors(ghjl; headers = options))))
 
 # test GitLab.stats
-@test stats(ghjl, "contributors"; auth = auth).status < 300
+## TODO - Enable @test stats(ghjl, "compound_metrics"; headers = options).status < 300
 
 # test GitLab.branch, GitLab.branches
-@test name(branch(ghjl, "master"; auth = auth)) == "master"
-@test hasghobj("master", first(branches(ghjl; auth = auth)))
+@test name(branch(ghjl, "master"; headers = options)) == "master"
+@test hasghobj("master", first(branches(ghjl; headers = options)))
 
 # test GitLab.commit, GitLab.commits
-@test name(commit(ghjl, testcommit; auth = auth)) == name(testcommit)
-@test hasghobj(testcommit, first(commits(ghjl; auth = auth)))
+@test name(commit(ghjl, testcommit; headers = options)) == name(testcommit)
+@test hasghobj(testcommit, first(commits(ghjl; headers = options)))
 
 # test GitLab.file, GitLab.directory, GitLab.readme, GitLab.permalink
-readme_file = file(ghjl, "README.md"; auth = auth)
-src_dir = first(directory(ghjl, "src"; auth = auth))
+readme_file = file(ghjl, "README.md", "master"; headers = options)
+#= No equivalent API - directory()
+src_dir = first(directory(ghjl, "src"; headers = options))
 owners_dir = src_dir[findfirst(c -> get(c.path) == "src/owners", src_dir)]
 test_sha = "eab14e1ab7b4de848ef6390101b6d40b489d5d08"
 readme_permalink = string(permalink(readme_file, test_sha))
 owners_permalink = string(permalink(owners_dir, test_sha))
 @test readme_permalink == "https://github.com/JuliaComputing/GitLab.jl/blob/$(test_sha)/README.md"
 @test owners_permalink == "https://github.com/JuliaComputing/GitLab.jl/tree/$(test_sha)/src/owners"
-@test readme_file == readme(ghjl; auth = auth)
 @test hasghobj("src/GitLab.jl", src_dir)
+=#
 
+@test readme_file == readme(ghjl; headers = options)
 # test GitLab.status, GitLab.statuses
-@test get(status(ghjl, testcommit; auth = auth).sha) == name(testcommit)
-@test !(isempty(first(statuses(ghjl, testcommit; auth = auth))))
+## TODO No equivalent API @test get(status(ghjl, testcommit; headers = options).sha) == name(testcommit)
+@test !(isempty(first(statuses(ghjl, testcommit; headers = options))))
 
+test_repo = GitLab.repo_by_name("TestProject1"; headers=options)
 # test GitLab.comment, GitLab.comments
-@test name(comment(ghjl, 154431956; auth = auth)) == 154431956
-@test !(isempty(first(comments(ghjl, 40; auth = auth))))
+## TODO - CHECK  @test name(comment(test_repo, 9, :commit; headers = options)) == 9
+@test !(isempty(first(comments(test_repo, "5c35ae1de7f6d6bfadf0186e165f7af6537e7da8", :commit; headers = options))))
 
-# These require `auth` to have push-access (it's currently a read-only token)
-# @test hasghobj("jrevels", first(collaborators(ghjl; auth = auth)))
-# @test iscollaborator(ghjl, "jrevels"; auth = auth)
+# These require `auth` to have push-access
+@test hasghobj("mdpradeep", collaborators(ghjl; headers = options))
+@test iscollaborator(ghjl, "mdpradeep"; headers = options)
 
 ##########
 # Issues #
 ##########
 
+## TODO - check
 state_param = Dict("state" => "all")
 
 # test GitLab.pull_request, GitLab.pull_requests
-@test get(pull_request(ghjl, 37; auth = auth).title) == "Fix dep warnings"
-@test hasghobj(37, first(pull_requests(ghjl; auth = auth, params = state_param)))
+@test get(pull_request(test_repo, 3; headers = options).title) == "edit"
+@test hasghobj(3, first(pull_requests(test_repo; headers = options, params = state_param)))
 
 # test GitLab.issue, GitLab.issues
-@test get(issue(ghjl, 40; auth = auth).title) == "Needs test"
-@test hasghobj(40, first(issues(ghjl; auth = auth, params = state_param)))
+@test get(issue(test_repo, 6; headers = options).title) == "This is a test"
+@test hasghobj(6, first(issues(test_repo; headers = options, params = state_param)))
 
 ############
 # Activity #
 ############
 
 # test GitLab.stargazers, GitLab.starred
-@test length(first(stargazers(ghjl; auth = auth))) > 10 # every package should fail tests if it's not popular enough :p
-@test hasghobj(ghjl, first(starred(testuser; auth = auth)))
+## TODO - NO equivalent API @test length(first(stargazers(ghjl; headers = options))) > 10 # every package should fail tests if it's not popular enough :p
+@test hasghobj(GitLab.repo_by_name("admin-project"; headers=options), first(starred(testuser; headers = options)))
 
+#= TODO no equivalent API
 # test GitLab.watched, GitLab.watched
-@test hasghobj(testuser, first(watchers(ghjl; auth = auth)))
-@test hasghobj(ghjl, first(watched(testuser; auth = auth)))
+@test hasghobj(testuser, first(watchers(test_repo; headers = options)))
+@test hasghobj(ghjl, first(watched(testuser; headers = options)))
+=#

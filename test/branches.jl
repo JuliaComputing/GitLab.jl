@@ -1,21 +1,16 @@
 import GitLab
+using Base.Test
 myauth = GitLab.authenticate(ENV["GITLAB_AUTH"]) # don't hardcode your access tokens!
 println("Authentication successful")
 options = Dict("private_token" => myauth.token)
-## @show options
 
-repo_data = Dict{AbstractString, Any}()
-repo_data["name"] = "TestProject1"
-repo_data["project_id"] = 1
+myrepo = GitLab.repo_by_name("TestProject1"; headers=options)
 
-## myrepo = GitLab.Repo("TestProject1")
-myrepo = GitLab.Repo(repo_data)
+branches = first(GitLab.branches(myrepo; params=options))
 
-@show myrepo
+@test GitLab.name(branches[1]) == "branch1"
+## @show branches
 
-branches = GitLab.branches(myrepo; params=options)
-@show branches
-
-println("Done !!!")
+println("Branches - Tests Done !!!")
 
 

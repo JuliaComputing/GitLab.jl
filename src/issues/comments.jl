@@ -111,11 +111,11 @@ kind_err_str(kind) = ("Error building comment request: :$kind is not a valid kin
 function comment(repo, item, kind = :issue; options...)
     if (kind == :issue) || (kind == :pr)
         ## MDP path = "/repos/$(name(repo))/issues/comments/$(name(item))"
-        path = "/api/v3/projects/$(get(repo.project_id))/issues/comments/$(name(item))"
+        path = "/api/v3/projects/$(get(repo.id))/issues/comments/$(name(item))"
     elseif kind == :review
-        path = "/api/v3/projects/$(get(repo.project_id))/pulls/comments/$(name(item))"
+        path = "/api/v3/projects/$(get(repo.id))/pulls/comments/$(name(item))"
     elseif kind == :commit
-        path = "/api/v3/projects/$(get(repo.project_id))/comments/$(name(item))"
+        path = "/api/v3/projects/$(get(repo.id))/comments/$(name(item))"
     else
         error(kind_err_str(kind))
     end
@@ -125,17 +125,16 @@ end
 function comments(repo, item, kind = :issue; options...)
     if (kind == :issue) || (kind == :pr)
         ## MDP path = "/repos/$(name(repo))/issues/$(name(item))/comments"
-        path = "/api/v3/projects/$(get(repo.project_id))/issues/$(name(item))/notes"
+        path = "/api/v3/projects/$(get(repo.id))/issues/$(name(item))/notes"
     elseif kind == :review
-        ## MDP path = "/api/v3/projects/$(get(repo.project_id))/pulls/$(name(item))/comments"
-        path = "/api/v3/projects/$(get(repo.project_id))/merge_requests/$(name(item))/notes"
+        ## MDP path = "/api/v3/projects/$(get(repo.id))/pulls/$(name(item))/comments"
+        path = "/api/v3/projects/$(get(repo.id))/merge_requests/$(name(item))/notes"
     elseif kind == :commit
-        path = "/api/v3/projects/$(get(repo.project_id))/commits/$(name(item))/comments"
+        path = "/api/v3/projects/$(get(repo.id))/repository/commits/$(name(item))/comments"
     else
         error(kind_err_str(kind))
     end
 
-@show path
     results, page_data = gh_get_paged_json(path; options...)
     return map(Comment, results), page_data
 end
@@ -143,28 +142,27 @@ end
 function create_comment(repo, item, kind = :issue; options...)
     if (kind == :issue) || (kind == :pr)
         ## MDP path = "/repos/$(name(repo))/issues/$(name(item))/comments"
-        path = "/api/v3/projects/$(get(repo.project_id))/issues/$(name(item))/notes"
+        path = "/api/v3/projects/$(get(repo.id))/issues/$(name(item))/notes"
     elseif kind == :review
         ## MDP path = "/repos/$(name(repo))/pulls/$(name(item))/comments"
-        path = "/api/v3/projects/$(get(repo.project_id))/merge_requests/$(name(item))/notes"
+        path = "/api/v3/projects/$(get(repo.id))/merge_requests/$(name(item))/notes"
     elseif kind == :commit
         ## MDP path = "/repos/$(name(repo))/commits/$(name(item))/comments"
-        path = "/api/v3/projects/$(get(repo.project_id))/repository/commits/$(name(item))/comments"
+        path = "/api/v3/projects/$(get(repo.id))/repository/commits/$(name(item))/comments"
     else
         error(kind_err_str(kind))
     end
-@show path
     return Comment(gh_post_json(path; options...))
 end
 
 function edit_comment(repo, item, kind = :issue; options...)
     if (kind == :issue) || (kind == :pr)
         ## MDP path = "/repos/$(name(repo))/issues/comments/$(name(item))"
-        path = "/api/v3/projects/$(get(repo.project_id))/issues/comments/$(name(item))"
+        path = "/api/v3/projects/$(get(repo.id))/issues/comments/$(name(item))"
     elseif kind == :review
-        path = "/api/v3/projects/$(get(repo.project_id))/pulls/comments/$(name(item))"
+        path = "/api/v3/projects/$(get(repo.id))/pulls/comments/$(name(item))"
     elseif kind == :commit
-        path = "/api/v3/projects/$(get(repo.project_id))/comments/$(name(item))"
+        path = "/api/v3/projects/$(get(repo.id))/comments/$(name(item))"
     else
         error(kind_err_str(kind))
     end
@@ -173,11 +171,11 @@ end
 
 function delete_comment(repo, item, kind = :issue; options...)
     if (kind == :issue) || (kind == :pr)
-        path = "/api/v3/projects/$(get(repo.project_id))/issues/comments/$(name(item))"
+        path = "/api/v3/projects/$(get(repo.id))/issues/comments/$(name(item))"
     elseif kind == :review
-        path = "/api/v3/projects/$(get(repo.project_id))/pulls/comments/$(name(item))"
+        path = "/api/v3/projects/$(get(repo.id))/pulls/comments/$(name(item))"
     elseif kind == :commit
-        path = "/api/v3/projects/$(get(repo.project_id))/comments/$(name(item))"
+        path = "/api/v3/projects/$(get(repo.id))/comments/$(name(item))"
     else
         error(kind_err_str(kind))
     end

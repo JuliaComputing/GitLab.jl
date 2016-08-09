@@ -10,9 +10,9 @@ type WebhookEvent
 end
 
 function event_from_payload!(kind, data::Dict)
-    @show data
+    ## @show data
     if haskey(data, "repository")
-        data["repository"]["project_id"] = data["project_id"] ## Repos are identified through projects !
+        data["repository"]["id"] = data["project_id"] ## Repos are identified through projects !
         repository = Repo(data["repository"])
     elseif kind == "membership"
         repository = Repo("")
@@ -20,8 +20,8 @@ function event_from_payload!(kind, data::Dict)
         error("event payload is missing repository field")
     end
 
-    @show repository
-    #=
+    ## @show repository
+    #= TODO CHECK
     if haskey(data, "sender")
         sender = Owner(data["sender"])
     else
@@ -63,7 +63,6 @@ function is_valid_event(request::HttpCommon.Request, events)
 end
 
 function from_valid_repo(event, repos)
-@show event.repository, repos
     return (name(event.repository) == "" || in(name(event.repository), repos))
 end
 
@@ -109,14 +108,14 @@ function handle_event_request(request, handle;
                               auth::Authorization = AnonymousAuth(),
                               secret = nothing, events = nothing,
                               repos = nothing, forwards = nothing)
+    #=
     @show secret, events, auth, handle
-#=
     @show request.method
     @show request.resource
     @show request.headers
     @show UTF8String(request.data)
     @show request.uri
-=#
+    =#
     if !(isa(secret, Void)) && !(has_valid_secret(request, secret))
         ## MDP TODO
         println("FIX ME !!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
@@ -128,7 +127,6 @@ function handle_event_request(request, handle;
     end
 
     event = event_from_payload!(event_header(request), Requests.json(request))
-    @show event
 
     if !(isa(repos, Void)) && !(from_valid_repo(event, repos))
         return HttpCommon.Response(400, "invalid repo")

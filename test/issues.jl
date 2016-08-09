@@ -1,17 +1,13 @@
 import GitLab
+using Base.Test
 myauth = GitLab.authenticate(ENV["GITLAB_AUTH"]) # don't hardcode your access tokens!
 println("Authentication successful")
 options = Dict("private_token" => myauth.token)
-## @show options
 
-repo_data = Dict{AbstractString, Any}()
-repo_data["name"] = "TestProject1"
-repo_data["project_id"] = 1
-myrepo = GitLab.Repo(repo_data)
-@show myrepo
+myrepo = GitLab.repo_by_name("TestProject1"; headers=options)
 
 issues, page_data = GitLab.issues(myrepo; params=options)
-@show issues
+## @show issues
 
 ## get specific issues:
 ## state        string  no  Return all issues or just those that are opened or closed
@@ -20,42 +16,40 @@ issues, page_data = GitLab.issues(myrepo; params=options)
 ## sort         string  no  Return requests sorted in asc or desc order. Default is desc
 options["labels"] = "MyLabel"
 issues = GitLab.issues(myrepo; params=options)
-@show issues
+## @show issues
 
 issue = issues[1]
 
 options["labels"] = "wronglabel"
 issues, page_data = GitLab.issues(myrepo; params=options)
-@show issues
-if sizeof(issues) == 0
-    println("Test passed")
-else
-    println("Test failed")
-end
+@test sizeof(issues) == 0
 if haskey(options, "labels")
     delete!(options, "labels")
 end
 
 issue = GitLab.issue(myrepo, get(issue[1].id); params=options)
-@show issue
+## @show issue
 
 issue_data = Dict{AbstractString, Any}()
 issue_data["title"] = "This is a test"
 issue_data["description"] = "This is some description"
 issue = GitLab.create_issue(myrepo; params=issue_data, headers=options)
-@show issue
+## @show issue
+@test get(issue.title) == "This is a test"
 
 issue_data["title"] = "This is a test - edit"
 issue_data["description"] = "This is some description - edit"
 issue = GitLab.edit_issue(myrepo, get(issue.id); params=issue_data, headers=options)
-@show issue
+## @show issue
+@test get(issue.title) == "This is a test - edit"
 
 println("Sleeping before deleting the issue !!")
 sleep(10)
 
 del_issue = GitLab.delete_issue(myrepo, get(issue.id); params=issue_data, headers=options)
-@show del_issue
+## @show del_issue
+@test get(del_issue.title) == "This is a test - edit"
 
 
-println("Done !!!")
+println("Issue Tests Done !!!")
 

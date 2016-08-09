@@ -30,12 +30,12 @@ namefield(commit::Commit) = commit.id
 
 function commits(repo; options...)
     ## MDP results, page_data = gh_get_paged_json("/repos/$(name(repo))/commits"; options...)
-    results, page_data = gh_get_paged_json("/api/v3/projects/$(get(repo.project_id))/commits"; options...)
+    results, page_data = gh_get_paged_json("/api/v3/projects/$(get(repo.id))/repository/commits"; options...)
     return map(Commit, results), page_data
 end
 
 function commit(repo, id; options...)
     ## MDP result = gh_get_json("/repos/$(name(repo))/commits/$(name(id))"; options...)
-    result = gh_get_json("/api/v3/projects/$(get(repo.project_id))/commits/$(name(id))"; options...)
+    result = gh_get_json("/api/v3/projects/$(get(repo.id))/repository/commits/$(name(id))"; options...)
     return Commit(result)
 end
