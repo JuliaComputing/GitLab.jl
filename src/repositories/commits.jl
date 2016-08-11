@@ -34,8 +34,8 @@ function commits(repo; options...)
     return map(Commit, results), page_data
 end
 
-function commit(repo, id; options...)
-    ## MDP result = gh_get_json("/repos/$(name(repo))/commits/$(name(id))"; options...)
-    result = gh_get_json("/api/v3/projects/$(get(repo.id))/repository/commits/$(name(id))"; options...)
+function commit(repo, sha; options...)
+    ## MDP result = gh_get_json("/repos/$(name(repo))/commits/$(name(sha))"; options...)
+    result = gh_get_json("/api/v3/projects/$(get(repo.id))/repository/commits/$(name(sha))"; options...)
     return Commit(result)
 end

@@ -2,31 +2,9 @@
 
 ### NOTE: 
 
-This is a WIP repo for providing API access to GitLab repos. The current status is as below:
-
-### Completed:
-
-* Ability to run an event server and receive events from GitLab
-* Ability to run a comment server, receive events from GitLab and update comments on GitLab
-* Ability to set a star on a repo
+This is a repo for providing API access to GitLab repos. Majority of the code from `[GitHub.jl](https://github.com/JuliaWeb/GitHub.jl)` has been reused here. Also, the interfaces and terminologies have been retained to the extent possible.
 
 
-### To Be Done: 
-
-* handling comments as part of issues
-* handling comments as part of PRs
-* Support for star APIs
-* Support for stargazers APIs
-* Support for user related APIs
-* Support for repo related APIs
-
-
-
-[![GitLab](http://pkg.julialang.org/badges/GitLab_0.4.svg)](http://pkg.julialang.org/?pkg=GitLab)
-[![GitLab](http://pkg.julialang.org/badges/GitLab_0.5.svg)](http://pkg.julialang.org/?pkg=GitLab)
-[![Build Status](https://travis-ci.org/JuliaComputing/GitLab.jl.svg?branch=master)](https://travis-ci.org/JuliaComputing/GitLab.jl)
-[![Build status](https://ci.appveyor.com/api/projects/status/gmlm8snv03aw5pwq/branch/master?svg=true)](https://ci.appveyor.com/project/jrevels/gitlab-jl-lj49i/branch/master)
-[![Coverage Status](https://coveralls.io/repos/JuliaComputing/GitLab.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/JuliaComputing/GitLab.jl?branch=master)
 
 GitLab.jl provides a Julia interface to the [GitLab API v3](http://docs.gitlab.com/ce/api/). Using GitLab.jl, you can do things like:
 
@@ -53,12 +31,7 @@ GitLab's JSON responses are parsed and returned to the caller as types of the fo
 
 - All fields are `Nullable`.
 - Field names generally match the corresponding field in GitLab's JSON representation (the exception is `"type"`, which has the corresponding field name `typ` to avoid the obvious language conflict).
-- `GitLabType`s can be passed as arguments to API methods in place of (and in combination with) regular identifying properties. For example, `create_status(repo, commit)` could be called as:
 
-   - `create_status(::GitLab.Repo, ::GitLab.Commit)`
-   - `create_status(::GitLab.Repo, ::AbstractString)` where the second argument is the SHA
-   - `create_status(::AbstractString, ::GitLab.Commit)` where the first argument is the full qualified repo name
-   - `create_status(::AbstractString, ::AbstractString)` where the first argument is the repo name, and the second is the SHA
 
 Here's a table that matches up the provided `GitLabType`s with their corresponding API documentation, as well as alternative identifying values:
 
@@ -84,95 +57,87 @@ GitLab.jl implements a bunch of methods that make REST requests to GitLab's API.
 
 | method                                   | return type                        | documentation                                                                                                                                                                                               |
 |------------------------------------------|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `owner(owner[, isorg = false])`          | `Owner`                            | get `owner` as a [user](https://developer.gitlab.com/v3/users/#get-a-single-user) or [organization](https://developer.gitlab.com/v3/orgs/#get-an-organization)                                                    |
-| `orgs(owner)`                            | `Tuple{Vector{Owner}, Dict}`       | [get the `owner`'s organizations](https://developer.gitlab.com/v3/orgs/#list-user-organizations)                                                                                                            |
-| `followers(owner)`                       | `Tuple{Vector{Owner}, Dict}`       | [get the `owner`'s followers](https://developer.gitlab.com/v3/users/followers/#list-followers-of-a-user)                                                                                                    |
-| `following(owner)`                       | `Tuple{Vector{Owner}, Dict}`       | [get the users followed by `owner`](https://developer.gitlab.com/v3/users/followers/#list-users-followed-by-another-user)                                                                                   |
-| `repos(owner[, isorg = false])`          | `Tuple{Vector{Repo}, Dict}`        | [get the `owner`'s repositories](https://developer.gitlab.com/v3/repos/#list-user-repositories)/[get an organization's repositories](https://developer.gitlab.com/v3/repos/#list-organization-repositories) |
+| `owner(owner[, isorg = false])`          | `Owner`                            | get `owner` as a [user](http://docs.gitlab.com/ce/api/users.html#for-normal-users) or [organization](http://docs.gitlab.com/ce/api/projects.html#search-for-projects-by-name)                                                                                                                                    |
+| `repos(owner[, isorg = false])`          | `Tuple{Vector{Repo}, Dict}`       | [get the `owner`'s repositories](http://docs.gitlab.com/ce/api/projects.html#list-owned-projects) 
+
 
 #### Repositories
 
 | method                                   | return type                        | documentation                                                                                                                                                                                               |
 |------------------------------------------|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `repo(repo)`                             | `Repo`                             | [get `repo`](https://developer.gitlab.com/v3/repos/#get)                                                                                                                                                    |
-| `create_fork(repo)`                      | `Repo`                             | [create a fork of `repo`](https://developer.gitlab.com/v3/repos/forks/#create-a-fork)                                                                                                                       |
-| `forks(repo)`                            | `Tuple{Vector{Repo}, Dict}`        | [get `repo`'s forks](https://developer.gitlab.com/v3/repos/forks/#list-forks)                                                                                                                               |
-| `contributors(repo)`                     | `Dict`                             | [get `repo`'s contributors](https://developer.gitlab.com/v3/repos/#list-contributors)                                                                                                                       |
-| `collaborators(repo)`                    | `Tuple{Vector{Owner}, Dict}`       | [get `repo`'s collaborators](https://developer.gitlab.com/v3/repos/collaborators/#list)                                                                                                                     |
-| `iscollaborator(repo, user)`             | `Bool`                             | [check if `user` is a collaborator on `repo`](https://developer.gitlab.com/v3/repos/collaborators/#get)                                                                                                     |
-| `add_collaborator(repo, user)`           | `HttpCommon.Response`              | [add `user` as a collaborator to `repo`](https://developer.gitlab.com/v3/repos/collaborators/#add-collaborator)                                                                                             |
-| `remove_collaborator(repo, user)`        | `HttpCommon.Response`              | [remove `user` as a collaborator from `repo`](https://developer.gitlab.com/v3/repos/collaborators/#remove-collaborator)                                                                                     |
-| `stats(repo, stat[, attempts = 3])`      | `HttpCommon.Response`              | [get information on `stat` (e.g. "contributors", "code_frequency", "commit_activity", etc.)](https://developer.gitlab.com/v3/repos/statistics/)                                                             |
-| `commit(repo, sha)`                      | `Commit`                           | [get the commit specified by `sha`](https://developer.gitlab.com/v3/repos/commits/#get-a-single-commit)                                                                                                     |
-| `commits(repo)`                          | `Tuple{Vector{Commit}, Dict}`      | [get `repo`'s commits](https://developer.gitlab.com/v3/repos/commits/#list-commits-on-a-repository)                                                                                                         |
-| `branch(repo, branch)`                   | `Branch`                           | [get the branch specified by `branch`](https://developer.gitlab.com/v3/repos/#get-branch)                                                                                                                   |
-| `branches(repo)`                         | `Tuple{Vector{Branch}, Dict}`      | [get `repo`'s branches](https://developer.gitlab.com/v3/repos/#list-branches)                                                                                                                               |
-| `file(repo, path)`                       | `Content`                          | [get the file specified by `path`](https://developer.gitlab.com/v3/repos/contents/#get-contents)                                                                                                            |
-| `directory(repo, path)`                  | `Tuple{Vector{Content}, Dict}`     | [get the contents of the directory specified by `path`](https://developer.gitlab.com/v3/repos/contents/#get-contents)                                                                                       |
-| `create_file(repo, path)`                | `Dict`                             | [create a file at `path` in `repo`](https://developer.gitlab.com/v3/repos/contents/#create-a-file)                                                                                                          |
-| `update_file(repo, path)`                | `Dict`                             | [update a file at `path` in `repo`](https://developer.gitlab.com/v3/repos/contents/#update-a-file)                                                                                                          |
-| `delete_file(repo, path)`                | `Dict`                             | [delete a file at `path` in `repo`](https://developer.gitlab.com/v3/repos/contents/#delete-a-file)                                                                                                          |
-| `permalink(content::Content, commit)`    | `HttpCommon.URI`                   | [get a permalink for `content` at the SHA specified by `commit`](https://help.gitlab.com/articles/getting-permanent-links-to-files/)                                                                        |
-| `readme(repo)`                           | `Content`                          | [get `repo`'s README](https://developer.gitlab.com/v3/repos/contents/#get-the-readme)                                                                                                                       |
-| `create_status(repo, sha)`               | `Status`                           | [create a status for the commit specified by `sha`](https://developer.gitlab.com/v3/repos/statuses/#create-a-status)                                                                                        |
-| `statuses(repo, ref)`                    | `Tuple{Vector{Status}, Dict}`      | [get the statuses posted to `ref`](https://developer.gitlab.com/v3/repos/statuses/#list-statuses-for-a-specific-ref)                                                                                        |
-| `status(repo, ref)`                      | `Status`                           | [get the combined status for `ref`](https://developer.gitlab.com/v3/repos/statuses/#get-the-combined-status-for-a-specific-ref)                                                                             |
+| `repo_by_name(repo)`                     | `Repo`                             | [get `repo`](http://docs.gitlab.com/ce/api/projects.html#search-for-projects-by-name)                                                                                                                                                    |
+| `create_fork(repo)`                      | `Repo`                             | [create a fork of `repo`](http://docs.gitlab.com/ce/api/projects.html#fork-project)                                                                                                                       |
+|
+| `contributors(repo)`                     | `Tuple{Vector{Dict}, Dict}`        | [get `repo`'s contributors](http://docs.gitlab.com/ce/api/repositories.html#contributors)                                                                                                                       |
+| `collaborators(repo)`                    | `Tuple{Vector{Owner}, Dict}`       | [get `repo`'s collaborators](http://docs.gitlab.com/ce/api/projects.html#list-project-team-members)                                                                                                                     |
+| `iscollaborator(repo, user)`             | `Bool`                             | [check if `user` is a collaborator on `repo`](http://docs.gitlab.com/ce/api/projects.html#list-project-team-members)                                                                                                     |
+| `add_collaborator(repo, user)`           | `HttpCommon.Response`              | [add `user` as a collaborator to `repo`](http://docs.gitlab.com/ce/api/projects.html#add-project-team-member)                                                                                             |
+| `remove_collaborator(repo, user)`        | `HttpCommon.Response`              | [remove `user` as a collaborator from `repo`](http://docs.gitlab.com/ce/api/projects.html#remove-project-team-member)                                                                                     |
+| `stats(repo, stat[, attempts = 3])`      | `HttpCommon.Response`              | [get information on `stat` (e.g. "queue_metrics", "process_metrics", "job_stats" & "compound_metrics".)](http://docs.gitlab.com/ce/api/sidekiq_metrics.html)  - This may require additional configuration
+| `commit(repo, sha)`                      | `Commit`                           | [get the commit specified by `sha`](http://docs.gitlab.com/ce/api/commits.html#get-a-single-commit)                                                                                                     |
+| `commits(repo)`                          | `Tuple{Vector{Commit}, Dict}`      | [get `repo`'s commits](http://docs.gitlab.com/ce/api/commits.html#list-repository-commits)                                                                                                         |
+| `branch(repo, branch)`                   | `Branch`                           | [get the branch specified by `branch`](http://docs.gitlab.com/ce/api/branches.html#get-single-repository-branch)                                                                                                                   |
+| `branches(repo)`                         | `Tuple{Vector{Branch}, Dict}`      | [get `repo`'s branches](http://docs.gitlab.com/ce/api/branches.html#list-repository-branches)                                                                                                                               |
+| `file(repo, path, ref)`                  | `Content`                          | [get the file specified by `path`](http://docs.gitlab.com/ce/api/repository_files.html#get-file-from-repository)                                                                                                            |
+| `create_file(repo, path)`                | `Dict`                             | [create a file at `path` in `repo`](http://docs.gitlab.com/ce/api/repository_files.html#create-new-file-in-repository)                                                                                                          |
+| `update_file(repo, path)`                | `Dict`                             | [update a file at `path` in `repo`](http://docs.gitlab.com/ce/api/repository_files.html#update-existing-file-in-repository)                                                                                                          |
+| `delete_file(repo, path)`                | `Dict`                             | [delete a file at `path` in `repo`](http://docs.gitlab.com/ce/api/repository_files.html#delete-existing-file-in-repository)                                                                                                          |
+| `readme(repo)`                           | `Content`                          | [get `repo`'s README.md](http://docs.gitlab.com/ce/api/repository_files.html#get-file-from-repository)                                                                                                                       |
+| `create_status(repo, sha)`               | `Status`                           | [create a status for the commit specified by `sha`](http://docs.gitlab.com/ce/api/commits.html#commit-status)                                                                                        |
+| `statuses(repo, ref)`                    | `Tuple{Vector{Status}, Dict}`      | [get the statuses posted to `ref`](http://docs.gitlab.com/ce/api/commits.html#commit-status)                                                                                        |
+
 
 #### Pull Requests and Issues
 
 | method                                   | return type                        | documentation                                                                                                                                                                                               |
 |------------------------------------------|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `pull_request(repo, pr)`                 | `PullRequest`                      | [get the pull request specified by `pr`](https://developer.gitlab.com/v3/pulls/#get-a-single-pull-request)                                                                                                  |
-| `pull_requests(repo)`                    | `Tuple{Vector{PullRequest}, Dict}` | [get `repo`'s pull requests](https://developer.gitlab.com/v3/pulls/#list-pull-requests)                                                                                                                     |
-| `issue(repo, issue)`                     | `Issue`                            | [get the issue specified by `issue`](https://developer.gitlab.com/v3/issues/#get-a-single-issue)                                                                                                            |
-| `issues(repo)`                           | `Tuple{Vector{Issue}, Dict}`       | [get `repo`'s issues](https://developer.gitlab.com/v3/issues/#list-issues-for-a-repository)                                                                                                                 |
-| `create_issue(repo)`                     | `Issue`                            | [create an issue in `repo`](https://developer.gitlab.com/v3/issues/#create-an-issue)                                                                                                                        |
-| `edit_issue(repo, issue)`                | `Issue`                            | [edit `issue` in `repo`](https://developer.gitlab.com/v3/issues/#edit-an-issue)                                                                                                                             |
+| `pull_request(repo, pr)`                 | `PullRequest`                      | [get the pull request specified by `pr`](http://docs.gitlab.com/ce/api/merge_requests.html#get-single-mr)                                                                                                  |
+| `pull_requests(repo)`                    | `Tuple{Vector{PullRequest}, Dict}` | [get `repo`'s pull requests](http://docs.gitlab.com/ce/api/merge_requests.html#list-merge-requests)                                                                                                                     |
+| `issue(repo, issue)`                     | `Issue`                            | [get the issue specified by `issue`](http://docs.gitlab.com/ce/api/issues.html#new-issue)                                                                                                            |
+| `issues(repo)`                           | `Tuple{Vector{Issue}, Dict}`       | [get `repo`'s issues](http://docs.gitlab.com/ce/api/issues.html#list-issues)                                                                                                                 |
+| `create_issue(repo)`                     | `Issue`                            | [create an issue in `repo`](http://docs.gitlab.com/ce/api/issues.html#new-issue)                                                                                                                        |
+| `edit_issue(repo, issue)`                | `Issue`                            | [edit `issue` in `repo`](http://docs.gitlab.com/ce/api/issues.html#edit-issue)                                                                                                                             |
+| `delete_issue(repo, issue)`              | `Issue`                            | [delete `issue` in `repo`](http://docs.gitlab.com/ce/api/issues.html#delete-an-issue)                                                                                                                             |
 
 #### Comments
 
 | method                                   | return type                        | documentation                                                                                                                                                                                               |
 |------------------------------------------|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `comment(repo, comment, :issue)`         | `Comment`                          | [get an issue `comment` from `repo`](https://developer.gitlab.com/v3/issues/comments/#get-a-single-comment)                                                                                                 |
-| `comment(repo, comment, :pr)`            | `Comment`                          | [get a PR `comment` from `repo`](https://developer.gitlab.com/v3/issues/comments/#get-a-single-comment)                                                                                                     |
-| `comment(repo, comment, :review)`        | `Comment`                          | [get an review `comment` from `repo`](https://developer.gitlab.com/v3/pulls/comments/#get-a-single-comment)                                                                                                 |
-| `comment(repo, comment, :commit)`        | `Comment`                          | [get a commit `comment` from `repo`](https://developer.gitlab.com/v3/repos/comments/#get-a-single-commit-comment)                                                                                           |
-| `comments(repo, issue, :issue)`          | `Tuple{Vector{Comment}, Dict}`     | [get the comments on `issue` in `repo`](https://developer.gitlab.com/v3/issues/comments/#list-comments-on-an-issue)                                                                                         |
-| `comments(repo, pr, :pr)`                | `Tuple{Vector{Comment}, Dict}`     | [get the comments on `pr` in `repo`](https://developer.gitlab.com/v3/issues/comments/#list-comments-on-an-issue)                                                                                            |
-| `comments(repo, pr, :review)`            | `Tuple{Vector{Comment}, Dict}`     | [get the review comments on `pr` in `repo`](https://developer.gitlab.com/v3/pulls/comments/#list-comments-on-a-pull-request)                                                                                |
-| `comments(repo, commit, :commit)`        | `Tuple{Vector{Comment}, Dict}`     | [get the comments on `commit` in `repo`](https://developer.gitlab.com/v3/repos/comments/#list-comments-for-a-single-commit)                                                                                 |
-| `create_comment(repo, issue, :issue)`    | `Comment`                          | [create a comment on `issue` in `repo`](https://developer.gitlab.com/v3/issues/comments/#create-a-comment)                                                                                                  |
-| `create_comment(repo, pr, :pr)`          | `Comment`                          | [create a comment on `pr` in `repo`](https://developer.gitlab.com/v3/issues/comments/#create-a-comment)                                                                                                     |
-| `create_comment(repo, pr, :review)`      | `Comment`                          | [create a review comment on `pr` in `repo`](https://developer.gitlab.com/v3/pulls/comments/#create-a-comment)                                                                                               |
-| `create_comment(repo, commit, :commit)`  | `Comment`                          | [create a comment on `commit` in `repo`](https://developer.gitlab.com/v3/repos/comments/#create-a-commit-comment)                                                                                           |
-| `edit_comment(repo, comment, :issue)`    | `Comment`                          | [edit the issue `comment` in `repo`](https://developer.gitlab.com/v3/issues/comments/#edit-a-comment)                                                                                                       |
-| `edit_comment(repo, comment, :pr)`       | `Comment`                          | [edit the PR `comment` in `repo`](https://developer.gitlab.com/v3/issues/comments/#edit-a-comment)                                                                                                          |
-| `edit_comment(repo, comment, :review)`   | `Comment`                          | [edit the review `comment` in `repo`](https://developer.gitlab.com/v3/pulls/comments/#edit-a-comment)                                                                                                       |
-| `edit_comment(repo, comment, :commit)`   | `Comment`                          | [edit the commit `comment` in `repo`](https://developer.gitlab.com/v3/repos/comments/#update-a-commit-comment)                                                                                              |
-| `delete_comment(repo, comment, :issue)`  | `HttpCommon.Response`              | [delete the issue `comment` from `repo`](https://developer.gitlab.com/v3/issues/comments/#delete-a-comment)                                                                                                 |
-| `delete_comment(repo, comment, :pr)`     | `HttpCommon.Response`              | [delete the PR `comment` from `repo`](https://developer.gitlab.com/v3/issues/comments/#delete-a-comment)                                                                                                    |
-| `delete_comment(repo, comment, :review)` | `HttpCommon.Response`              | [delete the review `comment` from `repo`](https://developer.gitlab.com/v3/pulls/comments/#delete-a-comment)                                                                                                 |
-| `delete_comment(repo, comment, :commit)` | `HttpCommon.Response`              | [delete the commit`comment` from `repo`](https://developer.gitlab.com/v3/repos/comments/#delete-a-commit-comment)                                                                                           |
+| `comment(repo, comment, :issue)`         | `Comment`                          | [get an issue `comment` from `repo`](http://docs.gitlab.com/ce/api/notes.html#get-single-issue-note)                                                                                                 |
+| `comment(repo, comment, :pr)`            | `Comment`                          | [get a PR `comment` from `repo`](http://docs.gitlab.com/ce/api/notes.html#get-single-merge-request-note)                                                                                                     |
+| `comment(repo, comment, :review)`        | `Comment`                          | [get an review `comment` from `repo`](http://docs.gitlab.com/ce/api/notes.html#get-single-merge-request-note)                                                                                                 |
+| `comment(repo, comment, :commit)`        | `Comment`                          | [get a commit `comment` from `repo`](http://docs.gitlab.com/ce/api/commits.html#get-the-comments-of-a-commit)                                                                                           |
+| `comments(repo, issue, :issue)`          | `Tuple{Vector{Comment}, Dict}`     | [get the comments on `issue` in `repo`](http://docs.gitlab.com/ce/api/notes.html#list-project-issue-notes)                                                                                         |
+| `comments(repo, pr, :pr)`                | `Tuple{Vector{Comment}, Dict}`     | [get the comments on `pr` in `repo`](http://docs.gitlab.com/ce/api/notes.html#list-all-merge-request-notes)                                                                                            |
+| `comments(repo, pr, :review)`            | `Tuple{Vector{Comment}, Dict}`     | [get the review comments on `pr` in `repo`](http://docs.gitlab.com/ce/api/notes.html#list-all-merge-request-notes)                                                                                |
+| `comments(repo, commit, :commit)`        | `Tuple{Vector{Comment}, Dict}`     | [get the comments on `commit` in `repo`](http://docs.gitlab.com/ce/api/commits.html#get-the-comments-of-a-commit)                                                                                 |
+| `create_comment(repo, issue, :issue)`    | `Comment`                          | [create a comment on `issue` in `repo`](http://docs.gitlab.com/ce/api/notes.html#create-new-issue-note)                                                                                                  |
+| `create_comment(repo, pr, :pr)`          | `Comment`                          | [create a comment on `pr` in `repo`](http://docs.gitlab.com/ce/api/notes.html#create-new-merge-request-note)                                                                                                     |
+| `create_comment(repo, pr, :review)`      | `Comment`                          | [create a review comment on `pr` in `repo`](http://docs.gitlab.com/ce/api/notes.html#create-new-merge-request-note)                                                                                               |
+| `create_comment(repo, commit, :commit)`  | `Comment`                          | [create a comment on `commit` in `repo`](http://docs.gitlab.com/ce/api/commits.html#post-comment-to-commit)                                                                                           |
+| `edit_comment(repo, comment, :issue)`    | `Comment`                          | [edit the issue `comment` in `repo`](http://docs.gitlab.com/ce/api/notes.html#modify-existing-issue-note)                                                                                                       |
+| `edit_comment(repo, comment, :pr)`       | `Comment`                          | [edit the PR `comment` in `repo`](http://docs.gitlab.com/ce/api/notes.html#modify-existing-merge-request-note)                                                                                                          |
+| `edit_comment(repo, comment, :review)`   | `Comment`                          | [edit the review `comment` in `repo`](http://docs.gitlab.com/ce/api/notes.html#modify-existing-merge-request-note)                                                                                                       |
+| `edit_comment(repo, comment, :commit)`   | `Comment`                          | [edit the commit `comment` in `repo`](http://docs.gitlab.com/ce/api/commits.html#post-comment-to-commit)                                                                                              |
+| `delete_comment(repo, comment, :issue)`  | `HttpCommon.Response`              | [delete the issue `comment` from `repo`](http://docs.gitlab.com/ce/api/notes.html#delete-an-issue-note)                                                                                                 |
+| `delete_comment(repo, comment, :pr)`     | `HttpCommon.Response`              | [delete the PR `comment` from `repo`](http://docs.gitlab.com/ce/api/notes.html#delete-a-merge-request-note)                                                                                                    |
+| `delete_comment(repo, comment, :review)` | `HttpCommon.Response`              | [delete the review `comment` from `repo`](http://docs.gitlab.com/ce/api/notes.html#delete-a-merge-request-note)                                                                                                 |
+
 
 #### Social Activity
 
 | method                                   | return type                        | documentation                                                                                                                                                                                               |
 |------------------------------------------|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `star(repo)`                             | `HttpCommon.Response`              | [star `repo`](https://developer.gitlab.com/v3/activity/starring/#star-a-repository)                                                                                                                         |
-| `unstar(repo)`                           | `HttpCommon.Response`              | [unstar `repo`](https://developer.gitlab.com/v3/activity/starring/#unstar-a-repository)                                                                                                                     |
-| `stargazers(repo)`                       | `Tuple{Vector{Owner}, Dict}`       | [get `repo`'s stargazers](https://developer.gitlab.com/v3/activity/starring/#list-stargazers)                                                                                                               |
-| `starred(user)`                          | `Tuple{Vector{Repo}, Dict}`        | [get repositories starred by `user`](https://developer.gitlab.com/v3/activity/starring/#list-repositories-being-starred)                                                                                    |
-| `watchers(repo)`                         | `Tuple{Vector{Owner}, Dict}`       | [get `repo`'s watchers](https://developer.gitlab.com/v3/activity/watching/#list-watchers)                                                                                                                   |
-| `watched(user)`                          | `Tuple{Vector{Repo}, Dict}`        | [get repositories watched by `user`](https://developer.gitlab.com/v3/activity/watching/#list-repositories-being-watched)                                                                                    |
-| `watch(repo)`                            | `HttpCommon.Response`              | [watch `repo`](https://developer.gitlab.com/v3/activity/watching/#set-a-repository-subscription)                                                                                                            |
-| `unwatch(repo)`                          | `HttpCommon.Response`              | [unwatch `repo`](https://developer.gitlab.com/v3/activity/watching/#delete-a-repository-subscription)                                                                                                       |
+| `star(repo)`                             | `HttpCommon.Response`              | [star `repo`](http://docs.gitlab.com/ce/api/projects.html#star-a-project)                                                                                                                         |
+| `unstar(repo)`                           | `HttpCommon.Response`              | [unstar `repo`](http://docs.gitlab.com/ce/api/projects.html#unstar-a-project)                                                                                                                     |
+| `starred(user)`                          | `Tuple{Vector{Repo}, Dict}`        | [get repositories starred by `user`](http://docs.gitlab.com/ce/api/projects.html#list-starred-projects)                                                                                    |
+
 
 #### Miscellaneous
 
 | method                                   | return type                        | documentation                                                                                                                                                                                               |
 |------------------------------------------|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `rate_limit()`                           | `Dict`                             | [get your rate limit status](https://developer.gitlab.com/v3/rate_limit/#get-your-current-rate-limit-status)                                                                                                |
-| `authenticate(token)`                    | `OAuth2`                           | [validate `token` and return an authentication object](https://developer.gitlab.com/v3/#authentication)                                                                                                     |
+| `authenticate(token)`                    | `OAuth2`                           | [validate `token` and return an authentication object](http://docs.gitlab.com/ce/api/README.html#authentication)                                                                                                     |
 
 #### Keyword Arguments
 
@@ -188,79 +153,24 @@ All REST methods accept the following keyword arguments:
 
 ## Authentication
 
-To authenticate your requests to GitLab, you'll need to generate an appropriate [access token](https://help.gitlab.com/articles/creating-an-access-token-for-command-line-use). Then, you can do stuff like the following (this example assumes that you set an environmental variable `GITHUB_AUTH` containing the access token):
+To authenticate your requests to GitLab, you'll need to generate an appropriate [access token](http://docs.gitlab.com/ce/api/oauth2.html). Then, you can do stuff like the following (this example assumes that you set an environmental variable `GITLAB_AUTH` containing the access token):
 
 ```julia
 import GitLab
-myauth = GitLab.authenticate(ENV["GITHUB_AUTH"]) # don't hardcode your access tokens!
+
+myauth = GitLab.authenticate(ENV["GITLAB_AUTH"]) # don't hardcode your access tokens!
+
 GitLab.star("JuliaComputing/GitLab.jl"; auth = myauth)  # star the GitLab.jl repo as the user identified by myauth
 ```
 
 As you can see, you can propagate the identity/permissions of the `myauth` token to GitLab.jl's methods by passing `auth = myauth` as a keyword argument.
 
-Note that if authentication is not provided, they'll be subject to the restrictions GitLab imposes on unauthenticated requests (such as [stricter rate limiting](https://developer.gitlab.com/v3/#rate-limiting))
 
-## Pagination
 
-GitLab will often [paginate](https://developer.gitlab.com/v3/#pagination) results for requests that return multiple items. On the GitLab.jl side of things, it's pretty easy to see which methods return paginated results by referring to the [REST Methods documentation](#rest-methods); if a method returns a `Tuple{Vector{T}, Dict}`, that means its results are paginated.
-
-Paginated methods return both the response values, and some pagination metadata. You can use the `per_page`/`page` query parameters and the `page_limit` keyword argument to configure result pagination.
-
-For example, let's request a couple pages of GitLab.jl's PRs, and configure our result pagination to see how it works:
-
-```julia
-# show all PRs (both open and closed), and give me 3 items per page starting at page 2
-julia> myparams = Dict("state" => "all", "per_page" => 3, "page" => 2);
-
-julia> prs, page_data = pull_requests("JuliaComputing/GitLab.jl"; params = myparams, page_limit = 2);
-
-julia> prs # 3 items per page * 2 page limit == 6 items, as expected
-6-element Array{GitLab.PullRequest,1}:
- GitLab.PullRequest(44)
- GitLab.PullRequest(43)
- GitLab.PullRequest(42)
- GitLab.PullRequest(41)
- GitLab.PullRequest(39)
- GitLab.PullRequest(38)
-
-julia> page_data
-Dict{UTF8String,UTF8String} with 4 entries:
-  "prev"  => "https://api.gitlab.com/repositories/16635105/pulls?page=2&per_page=3&state=all"
-  "next"  => "https://api.gitlab.com/repositories/16635105/pulls?page=4&per_page=3&state=all"
-  "first" => "https://api.gitlab.com/repositories/16635105/pulls?page=1&per_page=3&state=all"
-  "last"  => "https://api.gitlab.com/repositories/16635105/pulls?page=7&per_page=3&state=all"
-```
-
-In the above, `prs` contains the results from page 2 and 3. We know this because we specified page 2 as our starting page (`"page" => 2`), and limited the response to 2 pages max (`page_limit = 2`). In addition, we know that exactly 2 pages were actually retrieved, since there are 6 items and we said each page should only contain 3 items (`"per_page" => 3`).
-
-The values provided by `page_data` are the same values that are included in the [Link header](https://developer.gitlab.com/v3/#link-header) of the last requested item. You can continue paginating by starting a new paginated request at one of these links using the `start_page` keyword argument:
-
-```julia
-# Continue paging, starting with `page_data["next"]`.
-# Note that the `params` kwarg can't be used here because
-# the link passed to `start_page` has its own parameters
-julia> prs2, page_data2 = pull_requests("JuliaComputing/GitLab.jl"; page_limit = 2, start_page = page_data["next"]);
-
-julia> prs2
-6-element Array{GitLab.PullRequest,1}:
- GitLab.PullRequest(37)
- GitLab.PullRequest(34)
- GitLab.PullRequest(32)
- GitLab.PullRequest(30)
- GitLab.PullRequest(24)
- GitLab.PullRequest(22)
-
-julia> page_data2
-Dict{UTF8String,UTF8String} with 4 entries:
-  "prev"  => "https://api.gitlab.com/repositories/16635105/pulls?page=4&per_page=3&state=all"
-  "next"  => "https://api.gitlab.com/repositories/16635105/pulls?page=6&per_page=3&state=all"
-  "first" => "https://api.gitlab.com/repositories/16635105/pulls?page=1&per_page=3&state=all"
-  "last"  => "https://api.gitlab.com/repositories/16635105/pulls?page=7&per_page=3&state=all"
-```
 
 ## Handling Webhook Events
 
-GitLab.jl comes with configurable `EventListener` and `CommentListener` types that can be used as basic servers for parsing and responding to events delivered by [GitLab's repository Webhooks](https://developer.gitlab.com/webhooks/).
+GitLab.jl comes with configurable `EventListener` and `CommentListener` types that can be used as basic servers for parsing and responding to events delivered by [GitLab's repository Webhooks](https://gitlab.com/gitlab-org/gitlab-ce/blob/master/doc/web_hooks/web_hooks.md).
 
 #### `EventListener`
 
@@ -280,10 +190,10 @@ Here's an example that demonstrates how to construct and run an `EventListener` 
 import GitLab
 
 # EventListener settings
-myauth = GitLab.authenticate(ENV["GITHUB_AUTH"])
+myauth = GitLab.authenticate(ENV["GITLAB_AUTH"])
 mysecret = ENV["MY_SECRET"]
-myevents = ["pull_request", "push"]
-myrepos = [GitLab.Repo("owner1/repo1"), "owner2/repo2"] # can be Repos or repo names
+myevents = ["Push Hook", "MergeRequest"]
+myrepos = [GitLab.repo_by_name("MyTestProject1")]
 myforwards = [HttpCommon.URI("http://myforward1.com"), "http://myforward2.com"] # can be HttpCommon.URIs or URI strings
 
 # Set up Status parameters
@@ -358,7 +268,7 @@ The `CommentListener` constructor takes the following keyword arguments:
 
 For example, let's set up a silly `CommentListener` that responds to the commenter with a greeting. To give a demonstration of the desired behavior, if a collaborator makes a comment like:
 
-```
+```julia
 Man, I really would like to be greeted today.
 
 `sayhello("Bob", "outgoing")`
@@ -366,7 +276,7 @@ Man, I really would like to be greeted today.
 
 We want the `CommentLister` to reply:
 
-```
+```julia
 Hello, Bob, you look very outgoing today!
 ```
 
@@ -377,7 +287,7 @@ import GitLab
 
 # CommentListener settings
 trigger = r"`sayhello\(.*?\)`"
-myauth = GitLab.authenticate(ENV["GITHUB_AUTH"])
+myauth = GitLab.authenticate(ENV["GITLAB_AUTH"])
 mysecret = ENV["MY_SECRET"]
 
 # We can use Julia's `do` notation to set up the listener's handler function.

@@ -40,7 +40,6 @@ listener = GitLab.EventListener(auth = myauth,
                                 forwards = myforwards) do event
     kind, payload, repo = event.kind, event.payload, event.repository
 
-    println("Wake up .....")
     if kind == "pull_request" && payload["action"] == "closed"
         return HttpCommon.Response(200)
     end
@@ -56,7 +55,7 @@ listener = GitLab.EventListener(auth = myauth,
     try
         # run_and_log_benchmarks isn't actually a defined function, but you get the point
         ## run_and_log_benchmarks(event, "\$(sha)-benchmarks.csv")
-        println("All FINE !!!!!!!!!!!!!!!")
+        println("Done !
     catch err
         GitLab.create_status(repo, sha; auth = myauth, params = error_params(err))
         return HttpCommon.Response(500)

@@ -33,8 +33,8 @@ function branches(repo; options...)
     return map(Branch, results), page_data
 end
 
-function branch(repo, branch_obj; options...)
-    ## result = gh_get_json("/repos/$(name(repo))/branches/$(name(branch_obj))"; options...)
-    result = gh_get_json("/api/v3/projects/$(get(repo.id))/repository/branches/$(name(branch_obj))"; options...)
+function branch(repo, branch; options...)
+    ## result = gh_get_json("/repos/$(name(repo))/branches/$(name(branch))"; options...)
+    result = gh_get_json("/api/v3/projects/$(get(repo.id))/repository/branches/$(name(branch))"; options...)
     return Branch(result)
 end

@@ -99,6 +99,6 @@ repos(owner::Owner; options...) = repos(name(owner), isorg(owner); options...)
 
 function repos(owner, isorg = false; options...)
     ## results, page_data = gh_get_paged_json("/api/v3/$(typprefix(isorg))/$(name(owner))/repos"; options...)
-    results, page_data = gh_get_paged_json("/api/v3/projects"; options...)
+    results, page_data = gh_get_paged_json("/api/v3/projects/owned"; options...)
     return map(Repo, results), page_data
 end

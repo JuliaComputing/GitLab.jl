@@ -41,8 +41,8 @@ namefield(issue::Issue) = issue.id
 # API Methods #
 ###############
 
-function issue(repo::Repo, issue_id::Int; options...)
-    result = gh_get_json("/api/v3/projects/$(get(repo.id))/issues/$(issue_id)"; options...)
+function issue(repo::Repo, issue::Int; options...)
+    result = gh_get_json("/api/v3/projects/$(get(repo.id))/issues/$(issue)"; options...)
     return Issue(result)
 end
 
@@ -56,12 +56,12 @@ function create_issue(repo::Repo; options...)
     return Issue(result)
 end
 
-function edit_issue(repo::Repo, issue_id::Int; options...)
-    result = gh_put_json("/api/v3/projects/$(get(repo.id))/issues/$(issue_id)"; options...)
+function edit_issue(repo::Repo, issue::Int; options...)
+    result = gh_put_json("/api/v3/projects/$(get(repo.id))/issues/$(issue)"; options...)
     return Issue(result)
 end
 
-function delete_issue(repo::Repo, issue_id::Int; options...)
-    result = gh_delete_json("/api/v3/projects/$(get(repo.id))/issues/$(issue_id)"; options...)
+function delete_issue(repo::Repo, issue::Int; options...)
+    result = gh_delete_json("/api/v3/projects/$(get(repo.id))/issues/$(issue)"; options...)
     return Issue(result)
 end

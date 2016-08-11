@@ -64,7 +64,7 @@ function pull_requests(repo::Repo; options...)
     return map(PullRequest, results), page_data
 end
 
-function pull_request(repo::Repo, pr_id::Int; options...)
-    result = gh_get_json("/api/v3/projects/$(get(repo.id))/merge_requests/$(pr_id)"; options...)
+function pull_request(repo::Repo, pr::Int; options...)
+    result = gh_get_json("/api/v3/projects/$(get(repo.id))/merge_requests/$(pr)"; options...)
     return PullRequest(result)
 end
