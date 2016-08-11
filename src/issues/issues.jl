@@ -2,21 +2,26 @@
 # Issue type #
 ##############
 
-type Issue <: GitHubType
+type Issue <: GitLabType
     id::Nullable{Int}
-    number::Nullable{Int}
-    comments::Nullable{Int}
-    title::Nullable{GitHubString}
-    state::Nullable{GitHubString}
-    body::Nullable{GitHubString}
-    user::Nullable{Owner}
-    assignee::Nullable{Owner}
-    closed_by::Nullable{Owner}
+    iid::Nullable{Int}
+    project_id::Nullable{Int}
+    title::Nullable{GitLabString}
+    description::Nullable{GitLabString}
+    state::Nullable{GitLabString}
     created_at::Nullable{Dates.DateTime}
     updated_at::Nullable{Dates.DateTime}
+    ## labels::Nullable{Vector{Dict}}
+    labels::Nullable{Vector{GitLabString}}
+    milestone::Nullable{GitLabString}
+    assignee::Nullable{Owner}
+    author::Nullable{Owner}
+    subscribed::Nullable{Bool}
+    user_notes_count::Nullable{Int}
+
+#=
+    closed_by::Nullable{Owner}
     closed_at::Nullable{Dates.DateTime}
-    labels::Nullable{Vector{Dict}}
-    milestone::Nullable{Dict}
     pull_request::Nullable{PullRequest}
     url::Nullable{HttpCommon.URI}
     html_url::Nullable{HttpCommon.URI}
@@ -24,33 +29,39 @@ type Issue <: GitHubType
     comments_url::Nullable{HttpCommon.URI}
     events_url::Nullable{HttpCommon.URI}
     locked::Nullable{Bool}
+=#
 end
 
-Issue(data::Dict) = json2github(Issue, data)
-Issue(number::Real) = Issue(Dict("number" => number))
+Issue(data::Dict) = json2gitlab(Issue, data)
+Issue(id::Int) = Issue(Dict("id" => id))
 
-namefield(issue::Issue) = issue.number
+namefield(issue::Issue) = issue.id
 
 ###############
 # API Methods #
 ###############
 
-function issue(repo, issue_obj; options...)
-    result = gh_get_json("/repos/$(name(repo))/issues/$(name(issue_obj))"; options...)
+function issue(repo::Repo, issue::Int; options...)
+    result = gh_get_json("/api/v3/projects/$(get(repo.id))/issues/$(issue)"; options...)
     return Issue(result)
 end
 
-function issues(repo; options...)
-    results, page_data = gh_get_paged_json("/repos/$(name(repo))/issues"; options...)
+function issues(repo::Repo; options...)
+    results, page_data = gh_get_paged_json("/api/v3/projects/$(get(repo.id))/issues"; options...)
     return map(Issue, results), page_data
 end
 
-function create_issue(repo; options...)
-    result = gh_post_json("/repos/$(name(repo))/issues"; options...)
+function create_issue(repo::Repo; options...)
+    result = gh_post_json("/api/v3/projects/$(get(repo.id))/issues"; options...)
     return Issue(result)
 end
 
-function edit_issue(repo, issue; options...)
-    result = gh_patch_json("/repos/$(name(repo))/issues/$(name(issue))"; options...)
+function edit_issue(repo::Repo, issue::Int; options...)
+    result = gh_put_json("/api/v3/projects/$(get(repo.id))/issues/$(issue)"; options...)
+    return Issue(result)
+end
+
+function delete_issue(repo::Repo, issue::Int; options...)
+    result = gh_delete_json("/api/v3/projects/$(get(repo.id))/issues/$(issue)"; options...)
     return Issue(result)
 end

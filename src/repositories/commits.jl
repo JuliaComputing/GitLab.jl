@@ -2,36 +2,40 @@
 # Commit Type #
 ###############
 
-type Commit <: GitHubType
-    sha::Nullable{GitHubString}
-    message::Nullable{GitHubString}
-    author::Nullable{Owner}
-    committer::Nullable{Owner}
-    commit::Nullable{Commit}
-    url::Nullable{HttpCommon.URI}
-    html_url::Nullable{HttpCommon.URI}
-    comments_url::Nullable{HttpCommon.URI}
-    parents::Nullable{Vector{Commit}}
-    stats::Nullable{Dict}
-    files::Nullable{Vector{Content}}
-    comment_count::Nullable{Int}
+type Commit <: GitLabType
+    id::Nullable{GitLabString}
+    author_email::Nullable{GitLabString}
+    title::Nullable{GitLabString}
+    short_id::Nullable{GitLabString}
+    message::Nullable{GitLabString}
+    committer_name::Nullable{GitLabString}
+    ## parents::Nullable{Vector{Commit}}
+    parent_ids::Nullable{Vector{Any}}
+    authored_date::Nullable{GitLabString}
+    committer_email::Nullable{GitLabString}
+    ## author_name::Nullable{Owner}
+    author_name::Nullable{GitLabString}
+    committed_date::Nullable{GitLabString}
+    created_at::Nullable{GitLabString}
 end
 
-Commit(data::Dict) = json2github(Commit, data)
-Commit(sha::AbstractString) = Commit(Dict("sha" => sha))
+Commit(data::Dict) = json2gitlab(Commit, data)
+Commit(id::AbstractString) = Commit(Dict("id" => id))
 
-namefield(commit::Commit) = commit.sha
+namefield(commit::Commit) = commit.id
 
 ###############
 # API Methods #
 ###############
 
 function commits(repo; options...)
-    results, page_data = gh_get_paged_json("/repos/$(name(repo))/commits"; options...)
+    ## MDP results, page_data = gh_get_paged_json("/repos/$(name(repo))/commits"; options...)
+    results, page_data = gh_get_paged_json("/api/v3/projects/$(get(repo.id))/repository/commits"; options...)
     return map(Commit, results), page_data
 end
 
 function commit(repo, sha; options...)
-    result = gh_get_json("/repos/$(name(repo))/commits/$(name(sha))"; options...)
+    ## MDP result = gh_get_json("/repos/$(name(repo))/commits/$(name(sha))"; options...)
+    result = gh_get_json("/api/v3/projects/$(get(repo.id))/repository/commits/$(name(sha))"; options...)
     return Commit(result)
 end

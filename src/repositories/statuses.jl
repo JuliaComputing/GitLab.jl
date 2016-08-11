@@ -2,23 +2,32 @@
 # Status type #
 ###############
 
-type Status <: GitHubType
+type Status <: GitLabType
     id::Nullable{Int}
     total_count::Nullable{Int}
-    state::Nullable{GitHubString}
-    description::Nullable{GitHubString}
-    context::Nullable{GitHubString}
-    sha::Nullable{GitHubString}
+    state::Nullable{GitLabString}
+    description::Nullable{GitLabString}
+    context::Nullable{GitLabString}
+    sha::Nullable{GitLabString}
     url::Nullable{HttpCommon.URI}
     target_url::Nullable{HttpCommon.URI}
     created_at::Nullable{Dates.DateTime}
     updated_at::Nullable{Dates.DateTime}
     creator::Nullable{Owner}
-    repository::Nullable{Repo}
+    repository::Nullable{Repo} 
     statuses::Nullable{Vector{Status}}
+
+    ## For commit status
+    status::Nullable{GitLabString}
+    name::Nullable{GitLabString}
+    author::Nullable{Owner}
+    ref::Nullable{GitLabString}
+    started_at::Nullable{Dates.DateTime}
+    finished_at::Nullable{Dates.DateTime}
+    allow_failure::Nullable{Bool}
 end
 
-Status(data::Dict) = json2github(Status, data)
+Status(data::Dict) = json2gitlab(Status, data)
 Status(id::Real) = Status(Dict("id" => id))
 
 namefield(status::Status) = status.id
@@ -28,16 +37,18 @@ namefield(status::Status) = status.id
 ###############
 
 function create_status(repo, sha; options...)
-    result = gh_post_json("/repos/$(name(repo))/statuses/$(name(sha))"; options...)
+    result = gh_post_json("/api/v3/projects/$(get(repo.id))/statuses/$(name(sha))"; options...)
     return Status(result)
 end
 
 function statuses(repo, ref; options...)
-    results, page_data = gh_get_paged_json("/repos/$(name(repo))/commits/$(name(ref))/statuses"; options...)
+    results, page_data = gh_get_paged_json("/api/v3/projects/$(get(repo.id))/repository/commits/$(name(ref))/statuses"; options...)
     return map(Status, results), page_data
 end
 
+#= TODO: no equivalent API
 function status(repo, ref; options...)
-    result = gh_get_json("/repos/$(name(repo))/commits/$(name(ref))/status"; options...)
+    result = gh_get_json("/api/v3/projects/$(get(repo.id))/commits/$(name(ref))/status"; options...)
     return Status(result)
 end
+=#

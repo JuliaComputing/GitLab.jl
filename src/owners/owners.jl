@@ -2,16 +2,22 @@
 # Owner Type #
 ##############
 
-type Owner <: GitHubType
-    typ::Nullable{GitHubString}
-    email::Nullable{GitHubString}
-    name::Nullable{GitHubString}
-    login::Nullable{GitHubString}
-    bio::Nullable{GitHubString}
-    company::Nullable{GitHubString}
-    location::Nullable{GitHubString}
-    gravatar_id::Nullable{GitHubString}
+
+type Owner <: GitLabType
+    name::Nullable{GitLabString}
+    username::Nullable{GitLabString}
     id::Nullable{Int}
+    state::Nullable{GitLabString}
+    avatar_url::Nullable{HttpCommon.URI}
+    web_url::Nullable{HttpCommon.URI}
+    ownership_type::Nullable{GitLabString} 
+
+#=
+    email::Nullable{GitLabString}
+    bio::Nullable{GitLabString}
+    company::Nullable{GitLabString}
+    location::Nullable{GitLabString}
+    gravatar_id::Nullable{GitLabString}
     public_repos::Nullable{Int}
     owned_private_repos::Nullable{Int}
     total_private_repos::Nullable{Int}
@@ -20,59 +26,79 @@ type Owner <: GitHubType
     followers::Nullable{Int}
     following::Nullable{Int}
     collaborators::Nullable{Int}
-    blog::Nullable{HttpCommon.URI}
-    url::Nullable{HttpCommon.URI}
     html_url::Nullable{HttpCommon.URI}
     updated_at::Nullable{Dates.DateTime}
     created_at::Nullable{Dates.DateTime}
     date::Nullable{Dates.DateTime}
     hireable::Nullable{Bool}
     site_admin::Nullable{Bool}
+=#
 end
 
-Owner(data::Dict) = json2github(Owner, data)
-Owner(login::AbstractString, isorg = false) = Owner(Dict("login" => login, "typ" => isorg ? "User" : "Organization"))
+function Owner(data::Dict) 
+    o = json2gitlab(Owner, data)
+    isnull(o.username) ? o.ownership_type = Nullable("Organization") : o.ownership_type = Nullable("User")
+    o
+end
 
-namefield(owner::Owner) = owner.login
+Owner(username::AbstractString, isorg = false) = Owner(
+    Dict("username" => isorg ? "" : username, 
+         "name" => isorg ? username : "",
+         "ownership_type" => isorg ? "Organization" : "User"))
+## Owner(username::AbstractString) = Owner(Dict("username" => username))
 
-typprefix(isorg) = isorg ? "orgs" : "users"
+## namefield(owner::Owner) = owner.ownership_type == "Organization" ? owner.name : owner.username
+namefield(owner::Owner) = isorg(owner) ? owner.name : owner.username
+
+## typprefix(isorg) = isorg ? "orgs" : "users"
+typprefix(isorg) = isorg ? "projects" : "users"
 
 #############
 # Owner API #
 #############
 
-isorg(owner::Owner) = get(owner.typ, "") == "Organization"
+isorg(owner::Owner) = isnull(owner.ownership_type) ? true : get(owner.ownership_type, "") == "Organization"
 
 owner(owner_obj::Owner; options...) = owner(name(owner_obj), isorg(owner_obj); options...)
 
 function owner(owner_obj, isorg = false; options...)
-    result = gh_get_json("/$(typprefix(isorg))/$(name(owner_obj))"; options...)
-    return Owner(result)
+    ## TODO Need to look for a cleaner way of doing this ! Returns an array even while requesting a specific user
+    if isorg
+        result = gh_get_json("/api/v3/projects/search/$(owner_obj)"; options...)
+        return Owner(result[1]["owner"])
+    else
+        result = gh_get_json("/api/v3/users?username=$(owner_obj)"; options...)
+        return Owner(result[1])
+    end
 end
 
 function users(; options...)
-    results, page_data = gh_get_paged_json("/users"; options...)
+    results, page_data = gh_get_paged_json("/api/v3/users"; options...)
     return map(Owner, results), page_data
 end
 
 function orgs(owner; options...)
-    results, page_data = gh_get_paged_json("/users/$(name(owner))/orgs"; options...)
+    ## results, page_data = gh_get_paged_json("/api/v3/users/$(name(owner))/projects"; options...)
+    results, page_data = gh_get_paged_json("/api/v3/projects"; options...)
     return map(Owner, results), page_data
 end
 
+#= TODO: There seems to be no equivalent for these APIs 
 function followers(owner; options...)
-    results, page_data = gh_get_paged_json("/users/$(name(owner))/followers"; options...)
+    results, page_data = gh_get_paged_json("/api/v3/users/$(name(owner))/followers"; options...)
     return map(Owner, results), page_data
 end
 
 function following(owner; options...)
-    results, page_data = gh_get_paged_json("/users/$(name(owner))/following"; options...)
+    results, page_data = gh_get_paged_json("/api/v3/users/$(name(owner))/following"; options...)
     return map(Owner, results), page_data
 end
+=#
 
 repos(owner::Owner; options...) = repos(name(owner), isorg(owner); options...)
 
 function repos(owner, isorg = false; options...)
-    results, page_data = gh_get_paged_json("/$(typprefix(isorg))/$(name(owner))/repos"; options...)
+    ## results, page_data = gh_get_paged_json("/api/v3/$(typprefix(isorg))/$(name(owner))/repos"; options...)
+    results, page_data = gh_get_paged_json("/api/v3/projects/owned"; options...)
     return map(Repo, results), page_data
 end
