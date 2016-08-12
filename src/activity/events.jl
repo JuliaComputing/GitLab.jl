@@ -115,12 +115,12 @@ function handle_event_request(request, handle;
     @show request.headers
     @show UTF8String(request.data)
     @show request.uri
-    =#
     if !(isa(secret, Void)) && !(has_valid_secret(request, secret))
         ## MDP TODO
         println("FIX ME !!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         ## MDP return HttpCommon.Response(400, "invalid signature")
     end
+    =#
 
     if !(isa(events, Void)) && !(is_valid_event(request, events))
         return HttpCommon.Response(400, "invalid event")

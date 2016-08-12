@@ -193,7 +193,7 @@ import GitLab
 myauth = GitLab.authenticate(ENV["GITLAB_AUTH"])
 options = Dict("private_token" => myauth.token)
 mysecret = ENV["MY_SECRET"]
-myevents = ["Push Hook", "MergeRequest"]
+myevents = ["Note Hook", "MergeRequest"]
 myrepos = [GitLab.repo_by_name("MyTestProject1")]
 myforwards = [HttpCommon.URI("http://myforward1.com"), "http://myforward2.com"] # can be HttpCommon.URIs or URI strings
 
