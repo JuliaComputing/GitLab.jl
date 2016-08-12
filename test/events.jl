@@ -5,12 +5,10 @@ options = Dict("private_token" => myauth.token)
 
 
 
-## GitLab.collaborators("1"; params=options)
-
 # EventListener settings
 mysecret = ENV["MY_SECRET"]
-myevents = ["pull_request", "Push Hook"]
-myrepos = [GitLab.Repo("TestProject1")]
+myevents = ["Note Hook", "MergeRequest"]
+myrepos = [GitLab.repo_by_name("TestProject1"; headers=options)]
 myforwards = [HttpCommon.URI("http://myforward1.com"), "http://myforward2.com"] # can be HttpCommon.URIs or URI strings
 
 # Set up Status parameters
@@ -40,28 +38,29 @@ listener = GitLab.EventListener(auth = myauth,
                                 forwards = myforwards) do event
     kind, payload, repo = event.kind, event.payload, event.repository
 
-    if kind == "pull_request" && payload["action"] == "closed"
+    if kind == "MergeRequest" && payload["action"] == "closed"
         return HttpCommon.Response(200)
     end
 
-    if event.kind == "push"
+    comment = GitLab.Comment(event.payload["object_attributes"])
+    if event.payload["object_attributes"]["noteable_type"] == "push"
         sha = event.payload["after"]
-    elseif event.kind == "pull_request"
-        sha = event.payload["pull_request"]["head"]["sha"]
+    elseif event.payload["object_attributes"]["noteable_type"] == "MergeRequest"
+        sha = "$(comment.id)"
     end
 
-    GitLab.create_status(repo, sha; auth = myauth, params = pending_params)
+    GitLab.create_status(repo, sha; headers = options, params = pending_params)
 
     try
         # run_and_log_benchmarks isn't actually a defined function, but you get the point
         ## run_and_log_benchmarks(event, "\$(sha)-benchmarks.csv")
-        println("Done !
+        println("Done !")
     catch err
-        GitLab.create_status(repo, sha; auth = myauth, params = error_params(err))
+        GitLab.create_status(repo, sha; headers = options, params = error_params(err))
         return HttpCommon.Response(500)
     end
 
-    GitLab.create_status(repo, sha; auth = myauth, params = success_params)
+    GitLab.create_status(repo, sha; headers = options, params = success_params)
 
     return HttpCommon.Response(200)
 end

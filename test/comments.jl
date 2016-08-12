@@ -5,11 +5,7 @@ myauth = GitLab.authenticate(ENV["GITLAB_AUTH"]) # don't hardcode your access to
 println("Authentication successful")
 options = Dict("private_token" => myauth.token)
 
-# EventListener settings
-## mysecret = ENV["MY_SECRET"]
-
 ## Get the BenchmarkResults repo!
-
 benchmark_results_repo = GitLab.repo_by_name("BenchmarkResults"; headers=options)
 
 # CommentListener settings
@@ -55,7 +51,6 @@ listener = GitLab.CommentListener(trigger; auth = myauth) do event, phrase
         # load required query params for review comment creation
         comment_params["commit_id"] = "$(comment.id)"
         comment_params["path"] = "$(comment.url)"
-        ## MDP comment_params["position"] = get(comment.position)
         comment_params["position"] = "$(comment.id)"
     end
     ## @show reply_to, comment_kind

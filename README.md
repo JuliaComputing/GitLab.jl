@@ -191,8 +191,9 @@ import GitLab
 
 # EventListener settings
 myauth = GitLab.authenticate(ENV["GITLAB_AUTH"])
+options = Dict("private_token" => myauth.token)
 mysecret = ENV["MY_SECRET"]
-myevents = ["Push Hook", "MergeRequest"]
+myevents = ["Note Hook", "MergeRequest"]
 myrepos = [GitLab.repo_by_name("MyTestProject1")]
 myforwards = [HttpCommon.URI("http://myforward1.com"), "http://myforward2.com"] # can be HttpCommon.URIs or URI strings
 
@@ -285,10 +286,12 @@ Here's the code that will make this happen:
 ```julia
 import GitLab
 
+myauth = GitLab.authenticate(ENV["GITLAB_AUTH"]) # don't hardcode your access tokens!
+println("Authentication successful")
+options = Dict("private_token" => myauth.token)
+
 # CommentListener settings
 trigger = r"`sayhello\(.*?\)`"
-myauth = GitLab.authenticate(ENV["GITLAB_AUTH"])
-mysecret = ENV["MY_SECRET"]
 
 # We can use Julia's `do` notation to set up the listener's handler function.
 # Note that, in our example case, `phrase` will be "`sayhello(\"Bob\", \"outgoing\")`"
@@ -300,23 +303,23 @@ listener = GitLab.CommentListener(trigger; auth = myauth, secret = mysecret) do 
     # Parse the original comment event for all the necessary reply info
     comment = GitLab.Comment(event.payload["comment"])
 
-    if event.kind == "issue_comment"
+    if event.payload["object_attributes"]["noteable_type"] == "Issue"
         comment_kind = :issue
-        reply_to = event.payload["issue"]["number"]
-    elseif event.kind == "commit_comment"
+        reply_to = event.payload["object_attributes"]["noteable_id"]
+    elseif event.payload["object_attributes"]["noteable_type"] == "Commit"
         comment_kind = :commit
         reply_to = get(comment.commit_id)
-    elseif event.kind == "pull_request_review_comment"
+    elseif event.payload["object_attributes"]["noteable_type"] == "MergeRequest"
         comment_kind = :review
-        reply_to = event.payload["pull_request"]["number"]
+        reply_to = event.payload["object_attributes"]["noteable_id"]
         # load required query params for review comment creation
-        comment_params["commit_id"] = get(comment.commit_id)
-        comment_params["path"] = get(comment.path)
-        comment_params["position"] = get(comment.position)
+        comment_params["commit_id"] = "$(comment.id)"
+        comment_params["path"] = "$(comment.url)"
+        comment_params["position"] = "$(comment.id)"
     end
 
     # send the comment creation request to GitLab
-    GitLab.create_comment(event.repository, reply_to, comment_kind; auth = myauth, params = comment_params)
+    GitLab.create_comment(event.repository, reply_to, comment_kind; headers = options, params = comment_params)
 
     return HttpCommon.Response(200)
 end
