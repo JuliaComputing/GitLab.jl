@@ -2,7 +2,7 @@
 # WebhookEvent Type #
 #####################
 
-type WebhookEvent 
+type WebhookEvent
     kind::GitLabString
     payload::Dict
     repository::Repo
@@ -89,7 +89,7 @@ immutable EventListener
                                      secret = secret, events = events,
                                      repos = repos, forwards = forwards)
             catch err
-                println("SERVER ERROR: $err")
+                println("SERVER ERROR: $err\n$(join(catch_stacktrace(), "\n"))")
                 return HttpCommon.Response(500)
             end
         end
