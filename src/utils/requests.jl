@@ -2,8 +2,8 @@
 # Default API URIs #
 ####################
 
-## MDP const API_ENDPOINT = HttpCommon.URI("https://api.gitlab.com/")
-const API_ENDPOINT = HttpCommon.URI("http://104.197.141.88/")
+const API_ENDPOINT = "API_ENDPOINT" in keys(ENV) ? 
+    HttpCommon.URI(ENV["API_ENDPOINT"]) : HttpCommon.URI("http://104.197.141.88/")
 
 api_uri(path) = HttpCommon.URI(API_ENDPOINT, path = path)
 
