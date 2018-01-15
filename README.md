@@ -2,7 +2,7 @@
 
 ### NOTE: 
 
-This is a repo for providing API access to GitLab repos. Majority of the code from `[GitHub.jl](https://github.com/JuliaWeb/GitHub.jl)` has been reused here. Also, the interfaces and terminologies have been retained to the extent possible.
+This is a repo for providing API access to GitLab repos. Majority of the code from [GitHub.jl](https://github.com/JuliaWeb/GitHub.jl) has been reused here. Also, the interfaces and terminologies have been retained to the extent possible.
 
 
 
