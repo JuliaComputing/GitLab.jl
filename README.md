@@ -2,7 +2,7 @@
 
 ### NOTE: 
 
-This is a repo for providing API access to GitLab repos. Majority of the code from `[GitHub.jl](https://github.com/JuliaWeb/GitHub.jl)` has been reused here. Also, the interfaces and terminologies have been retained to the extent possible.
+This is a repo for providing API access to GitLab repos. Majority of the code from [GitHub.jl](https://github.com/JuliaWeb/GitHub.jl) has been reused here. Also, the interfaces and terminologies have been retained to the extent possible.
 
 
 
@@ -67,7 +67,6 @@ GitLab.jl implements a bunch of methods that make REST requests to GitLab's API.
 |------------------------------------------|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `repo_by_name(repo)`                     | `Repo`                             | [get `repo`](http://docs.gitlab.com/ce/api/projects.html#search-for-projects-by-name)                                                                                                                                                    |
 | `create_fork(repo)`                      | `Repo`                             | [create a fork of `repo`](http://docs.gitlab.com/ce/api/projects.html#fork-project)                                                                                                                       |
-|
 | `contributors(repo)`                     | `Tuple{Vector{Dict}, Dict}`        | [get `repo`'s contributors](http://docs.gitlab.com/ce/api/repositories.html#contributors)                                                                                                                       |
 | `collaborators(repo)`                    | `Tuple{Vector{Owner}, Dict}`       | [get `repo`'s collaborators](http://docs.gitlab.com/ce/api/projects.html#list-project-team-members)                                                                                                                     |
 | `iscollaborator(repo, user)`             | `Bool`                             | [check if `user` is a collaborator on `repo`](http://docs.gitlab.com/ce/api/projects.html#list-project-team-members)                                                                                                     |
